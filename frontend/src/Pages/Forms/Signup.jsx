@@ -43,7 +43,7 @@ const Signup = () => {
       setServerError('');
       setSuccessMsg('');
       try {
-        const res = await axios.post('http://localhost:5000/api/signup', values);
+        const res = await axios.post('https://ll-mw69.onrender.com/api/signup', values);
         setSuccessMsg(res.data.message || 'Signup successful!');
         formik.resetForm();
         setTimeout(() => {

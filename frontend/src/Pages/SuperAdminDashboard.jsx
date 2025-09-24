@@ -30,7 +30,7 @@ const SuperAdminDashboard = () => {
     setError('');
     setMessage('');
     try {
-      const res = await axios.post('http://localhost:5000/api/superadmin/invite-staff', { 
+      const res = await axios.post('https://ll-mw69.onrender.com/api/superadmin/invite-staff', { 
         email, firstName, lastName, type: 'teacher'
       });
       setMessage(res.data.message || 'Invitation sent');
@@ -48,7 +48,7 @@ const SuperAdminDashboard = () => {
 
   const fetchStaff = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/students');
+      const res = await fetch('https://ll-mw69.onrender.com/api/students');
       const data = await res.json();
       setStaff(Array.isArray(data) ? data.filter(u => u.type === 'teacher') : []);
     } catch (e) {
@@ -122,7 +122,7 @@ const SuperAdminDashboard = () => {
             <div className="student-actions">
               <button className="delete-btn" onClick={async () => {
                 if (!window.confirm('Delete this staff account?')) return;
-                await fetch(`http://localhost:5000/api/staff/${s._id}`, { method: 'DELETE' });
+                await fetch(`https://ll-mw69.onrender.com/api/staff/${s._id}`, { method: 'DELETE' });
                 fetchStaff();
               }}>Delete</button>
             </div>

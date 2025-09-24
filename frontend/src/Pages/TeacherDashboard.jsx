@@ -98,7 +98,7 @@ const TeacherDashboard = () => {
       const formData = new FormData();
       formData.append('file', uploadForm.file);
       try {
-        const res = await fetch('http://localhost:5000/api/materials/upload', {
+        const res = await fetch('https://ll-mw69.onrender.com/api/materials/upload', {
           method: 'POST',
           body: formData
         });
@@ -137,7 +137,7 @@ const TeacherDashboard = () => {
         console.error('Error parsing user data for createdBy:', error);
       }
     }
-    fetch('http://localhost:5000/api/materials', {
+    fetch('https://ll-mw69.onrender.com/api/materials', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -163,9 +163,9 @@ const TeacherDashboard = () => {
       }
       
       const [matsRes, studsRes, coursesRes] = await Promise.all([
-        fetch(`http://localhost:5000/api/materials?createdBy=${userId}`),
-        fetch('http://localhost:5000/api/students'),
-        fetch('http://localhost:5000/api/courses'),
+        fetch(`https://ll-mw69.onrender.com/api/materials?createdBy=${userId}`),
+        fetch('https://ll-mw69.onrender.com/api/students'),
+        fetch('https://ll-mw69.onrender.com/api/courses'),
       ]);
       const [mats, studs, crs] = await Promise.all([
         matsRes.json(), studsRes.json(), coursesRes.json()
@@ -183,7 +183,7 @@ const TeacherDashboard = () => {
   const handleDeleteMaterial = async (id) => {
     const ok = await confirmAction({ title: 'Delete Material', message: 'Are you sure you want to delete this material?', confirmLabel: 'Delete', type: 'warning' });
     if (!ok) return;
-    await fetch(`http://localhost:5000/api/materials/${id}`, { method: 'DELETE' });
+    await fetch(`https://ll-mw69.onrender.com/api/materials/${id}`, { method: 'DELETE' });
     setMaterials(prev => prev.filter(m => m._id !== id));
     openModal({ type: 'success', title: 'Deleted', message: 'Material deleted.' });
   };
@@ -231,7 +231,7 @@ const TeacherDashboard = () => {
       } catch {}
     }
     const proxyUrl = publicId
-      ? `http://localhost:5000/api/materials/download/${encodeURIComponent(publicId)}?mode=inline&name=${encodeURIComponent(friendlyName)}`
+      ? `https://ll-mw69.onrender.com/api/materials/download/${encodeURIComponent(publicId)}?mode=inline&name=${encodeURIComponent(friendlyName)}`
       : '';
     // Prefer direct Cloudinary fileUrl; fall back to proxy only if missing
     const inlineUrl = material.fileUrl || proxyUrl;
@@ -456,7 +456,7 @@ const TeacherDashboard = () => {
               <button className="material-actions" onClick={async () => {
                 const ok = await confirmAction({ title: 'Delete Course', message: `Delete course ${c.title}?`, confirmLabel: 'Delete', type: 'warning' });
                 if (!ok) return;
-                await fetch(`http://localhost:5000/api/courses/${c._id}`, { method: 'DELETE' });
+                await fetch(`https://ll-mw69.onrender.com/api/courses/${c._id}`, { method: 'DELETE' });
                 setCourses(prev => prev.filter(x => x._id !== c._id));
                 openModal({ type: 'success', title: 'Deleted', message: 'Course deleted.' });
               }}>Delete</button>
@@ -479,7 +479,7 @@ const TeacherDashboard = () => {
               const email = form.querySelector('#sa-email').value;
               if (!email) { openModal({ type: 'error', title: 'Error', message: 'Email is required' }); return; }
               try {
-                const res = await fetch('http://localhost:5000/api/superadmin/invite-staff', {
+                const res = await fetch('https://ll-mw69.onrender.com/api/superadmin/invite-staff', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ email, firstName, lastName, type: 'teacher' })
@@ -750,19 +750,19 @@ const TeacherDashboard = () => {
                 const lastName = prompt('Last name', s.lastName) || s.lastName;
                 const email = prompt('Email', s.email) || s.email;
                 const phone = prompt('Phone', s.phone || '') || s.phone;
-                const res = await fetch(`http://localhost:5000/api/students/${s._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ firstName, lastName, email, phone }) });
+                const res = await fetch(`https://ll-mw69.onrender.com/api/students/${s._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ firstName, lastName, email, phone }) });
                 if (res.ok) fetchAll();
               }}>Edit</button>
               <button onClick={async () => {
                 const ok = await confirmAction({ title: s.isActive ? 'Archive Student' : 'Restore Student', message: `Are you sure you want to ${s.isActive ? 'archive' : 'restore'} this student?`, confirmLabel: s.isActive ? 'Archive' : 'Restore', type: 'warning' });
                 if (!ok) return;
-                await fetch(`http://localhost:5000/api/students/${s._id}/archive`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: !s.isActive }) });
+                await fetch(`https://ll-mw69.onrender.com/api/students/${s._id}/archive`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive: !s.isActive }) });
                 fetchAll();
               }}>{s.isActive ? 'Archive' : 'Restore'}</button>
               <button className="delete-btn" onClick={async () => {
                 const ok = await confirmAction({ title: 'Delete Student', message: 'Delete this student?', confirmLabel: 'Delete', type: 'warning' });
                 if (!ok) return;
-                await fetch(`http://localhost:5000/api/students/${s._id}`, { method: 'DELETE' });
+                await fetch(`https://ll-mw69.onrender.com/api/students/${s._id}`, { method: 'DELETE' });
                 fetchAll();
                 openModal({ type: 'success', title: 'Deleted', message: 'Student deleted.' });
               }}>Delete</button>
