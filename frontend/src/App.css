@@ -1,0 +1,107 @@
+
+/* Signin Page Styles */
+.signin-bg {
+	background: #fff;
+}
+.signin-card {
+	background: white;
+	border-radius: 2rem;
+	box-shadow: 0 8px 32px rgba(26,42,128,0.10);
+	overflow: hidden;
+	min-width: 320px;
+	max-width: 900px;
+	width: 100%;
+}
+.signin-form-col {
+	min-height: 420px;
+	padding: 2.5rem 2rem;
+}
+.signin-img-col {
+	background: #23a6e0;
+	align-items: center;
+	justify-content: center;
+	display: flex;
+	min-height: 420px;
+	position: relative;
+}
+.signin-logo {
+	font-family: 'Segoe UI', Arial, sans-serif;
+	font-weight: 700;
+	letter-spacing: 1px;
+	text-align: center;
+}
+.signin-img-circle {
+	background: white;
+	border-radius: 50%;
+	width: 220px;
+	height: 220px;
+	box-shadow: 0 8px 32px rgba(26,42,128,0.10);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0 auto 2rem auto;
+}
+.signin-img {
+	width: 170px;
+	height: 170px;
+	object-fit: contain;
+	border-radius: 50%;
+}
+.signin-btn {
+	background: #1A2A80;
+	color: #fff;
+	font-weight: 600;
+	font-size: 1.1rem;
+	border-radius: 0.7rem;
+	box-shadow: 0 2px 8px rgba(26,42,128,0.08);
+	transition: background 0.2s;
+}
+.signin-btn:hover, .signin-btn:focus {
+	background: #0d174d;
+	color: #fff;
+}
+.signin-link {
+	color: #00c896;
+	font-weight: 600;
+	text-decoration: none;
+}
+.signin-link:hover {
+	text-decoration: underline;
+}
+.signin-input {
+	background: #f3f6fa;
+	border-radius: 0.5rem;
+	border: 1px solid #dbeafe;
+	font-size: 1rem;
+	padding: 0.7rem 1rem;
+	transition: border 0.2s;
+}
+.signin-input:focus {
+	border: 1.5px solid #1A2A80;
+	background: #fff;
+}
+.signin-back-arrow {
+	border: none;
+	background: transparent;
+	outline: none;
+	transition: color 0.2s;
+	z-index: 2;
+}
+.signin-back-arrow:hover, .signin-back-arrow:focus {
+	color: #0d174d !important;
+	text-decoration: none;
+}
+@media (max-width: 767px) {
+	.signin-card {
+		flex-direction: column !important;
+		min-width: 90vw;
+		max-width: 98vw;
+	}
+	.signin-img-col {
+		display: none !important;
+	}
+	.signin-form-col {
+		min-width: 90vw;
+		padding: 2rem 1rem;
+	}
+}

@@ -1,0 +1,588 @@
+import React, { useState, useEffect } from 'react';
+import MaterialCard from '../Components/MaterialCard';
+import Modal from '../Components/Modal';
+// Simple ErrorBoundary for StudentDashboard
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    // You can log errorInfo to an error reporting service here
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div style={{color: 'red', padding: 32}}><h2>Something went wrong in Student Dashboard.</h2><pre>{this.state.error && this.state.error.toString()}</pre></div>;
+    }
+    return this.props.children;
+  }
+}
+import Sidebar from '../Components/Sidebar';
+import Header from '../Components/Header';
+import StatsCard from '../Components/StatsCard';
+import './Dashboard.css';
+
+const StudentDashboard = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [notificationCount] = useState(1);
+  const [materials, setMaterials] = useState([]);
+  const [downloadedMaterials, setDownloadedMaterials] = useState(() => {
+    // Load from localStorage if available
+    try {
+      const stored = localStorage.getItem('downloadedMaterials');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [discussions, setDiscussions] = useState([]);
+  const [newDiscussion, setNewDiscussion] = useState('');
+  const [aiSummary, setAiSummary] = useState('');
+  const [suggestion, setSuggestion] = useState('');
+  const [selectedClass, setSelectedClass] = useState('SS1');
+
+  // Modal state
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', actions: [] });
+  const openModal = (payload) => setModal({ isOpen: true, title: '', message: '', type: 'info', actions: [], ...payload });
+  const closeModal = () => setModal(m => ({ ...m, isOpen: false }));
+
+  // Get user data from localStorage (set during login)
+  const getUserData = () => {
+    try {
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        return {
+          name: parsedUser.name || `${parsedUser.firstName || ''} ${parsedUser.lastName || ''}`.trim(),
+          id: parsedUser.uniqueId || parsedUser._id,
+          email: parsedUser.email,
+          role: parsedUser.type === 'student' ? 'Student' : parsedUser.type,
+          type: parsedUser.type || 'student',
+          firstName: parsedUser.firstName,
+          lastName: parsedUser.lastName
+        };
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    }
+    // Fallback to default values if no user data found
+    return {
+      name: 'Student User',
+      id: 'UNKNOWN',
+      role: 'Student',
+      type: 'student'
+    };
+  };
+
+  const user = getUserData();
+
+
+
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/materials?classLevel=${selectedClass}`);
+        const data = await res.json();
+        setMaterials(data);
+      } catch (err) {
+        setMaterials([]);
+      }
+    };
+    fetchMaterials();
+  }, [selectedClass]);
+
+
+  // Download material: add to downloads and trigger file download
+  const handleDownloadMaterial = (material) => {
+    if (!downloadedMaterials.find(m => m._id === material._id)) {
+      const updated = [...downloadedMaterials, { ...material, downloadDate: new Date().toLocaleDateString() }];
+      setDownloadedMaterials(updated);
+      try {
+        localStorage.setItem('downloadedMaterials', JSON.stringify(updated));
+      } catch {}
+    }
+    if (material.publicId) {
+      window.open(`http://localhost:5000/api/materials/download/${material.publicId}`, '_blank');
+    } else if (material.fileUrl) {
+      window.open(material.fileUrl, '_blank');
+    }
+  };
+
+  // Persist downloadedMaterials to localStorage on change
+  useEffect(() => {
+    try {
+      localStorage.setItem('downloadedMaterials', JSON.stringify(downloadedMaterials));
+    } catch {}
+  }, [downloadedMaterials]);
+
+  // Remove from downloads
+  const handleRemoveDownload = (materialId) => {
+    setDownloadedMaterials(prev => prev.filter(m => m._id !== materialId));
+  };
+
+  // Share material link
+  const handleShareMaterial = (material) => {
+    if (material.fileUrl) {
+      navigator.clipboard.writeText(material.fileUrl)
+        .then(() => openModal({ type: 'success', title: 'Link Copied', message: 'Material link copied to clipboard!' }))
+        .catch(() => openModal({ type: 'error', title: 'Copy Failed', message: 'Failed to copy link.' }));
+    } else {
+      openModal({ type: 'info', title: 'No Link', message: 'No file link available for this material.' });
+    }
+  };
+
+  // (Removed duplicate handleDownloadMaterial)
+
+  // (Removed unused handleRemoveSaved and savedMaterials)
+
+
+
+  // ...existing code...
+
+
+  // Fetch discussions for the student's class
+  useEffect(() => {
+    const fetchDiscussions = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/discussions?classLevel=${selectedClass}`);
+        const data = await res.json();
+        setDiscussions(data.reverse()); // Show newest first
+      } catch (err) {
+        setDiscussions([]);
+      }
+    };
+    fetchDiscussions();
+  }, [selectedClass]);
+
+  // Post a new discussion to backend
+  const handlePostDiscussion = async (e) => {
+    e.preventDefault();
+    if (newDiscussion.trim()) {
+      try {
+        const discussionPayload = {
+          name: user.name,
+          avatar: 'https://via.placeholder.com/32x32/ec4899/ffffff?text=SJ',
+          topic: 'General Discussion',
+          question: newDiscussion,
+          classLevel: selectedClass
+        };
+        const res = await fetch('http://localhost:5000/api/discussions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(discussionPayload)
+        });
+        if (res.ok) {
+          const newItem = await res.json();
+          setDiscussions(prev => [newItem, ...prev]);
+          setNewDiscussion('');
+        } else {
+          openModal({ type: 'error', title: 'Failed', message: 'Failed to post discussion.' });
+        }
+      } catch (err) {
+        openModal({ type: 'error', title: 'Failed', message: 'Failed to post discussion.' });
+      }
+    }
+  };
+  // (Replaces previous handlePostDiscussion)
+
+  const getFileIcon = (type) => {
+    const icons = {
+      pdf: '📄',
+      doc: '📝',
+      xls: '📊',
+      ppt: '📊',
+      default: '📄'
+    };
+    return icons[type] || icons.default;
+  };
+
+  const getFileColor = (type) => {
+    const colors = {
+      pdf: '#ef4444',
+      doc: '#3b82f6',
+      xls: '#10b981',
+      ppt: '#f59e0b',
+      default: '#6b7280'
+    };
+    return colors[type] || colors.default;
+  };
+
+  const renderDashboard = () => (
+    <div className="dashboard-content">
+      <div className="dashboard-section" style={{ marginBottom: 16 }}>
+        <div className="section-header">
+          <h3>Select Class</h3>
+        </div>
+        <div className="materials-list">
+          <select className="form-select" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} style={{ maxWidth: 240 }}>
+            <option value="JSS1">JSS1</option>
+            <option value="JSS2">JSS2</option>
+            <option value="JSS3">JSS3</option>
+            <option value="SS1">SS1</option>
+            <option value="SS2">SS2</option>
+            <option value="SS3">SS3</option>
+          </select>
+        </div>
+      </div>
+      <div className="stats-grid">
+        <StatsCard
+          title="Downloaded Materials"
+          value={downloadedMaterials.length}
+          change="+3 this week"
+          changeType="increase"
+          icon="⬇️"
+          iconColor="#3b82f6"
+        />
+        {/* Removed Saved Items card to prevent undefined errors */}
+        <StatsCard
+          title="Comments Posted"
+          value={discussions.length}
+          change="Active discussions"
+          changeType="increase"
+          icon="💬"
+          iconColor="#f59e0b"
+        />
+        <StatsCard
+          title="Study Progress"
+          value="87%"
+          change="On track"
+          changeType="increase"
+          icon="📊"
+          iconColor="#10b981"
+        />
+      </div>
+
+      <div className="dashboard-grid">
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h3>Recent Materials</h3>
+          </div>
+          <div className="materials-list">
+            {materials.length === 0 ? (
+              <p>No materials for your class yet.</p>
+            ) : (
+              materials.slice(0, 3).map((material) => (
+                <div key={material._id} className="material-item">
+                  <div className="material-icon" style={{ color: getFileColor(material.type) }}>
+                    {getFileIcon(material.type)}
+                  </div>
+                  <div className="material-info">
+                    <h4>{material.title}</h4>
+                    <p>{material.subject} • {material.size} • Class: {material.classLevel}</p>
+                  </div>
+                  <div className="material-actions">
+                    <button className="action-btn" title="Download" onClick={() => handleDownloadMaterial(material)}>⬇️</button>
+                    <button className="action-btn" title="Share" onClick={() => handleShareMaterial(material)}>�</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="dashboard-section">
+          <h3>Recent Discussions</h3>
+          <div className="discussions-list">
+            {/* No dummy discussions. Render real discussions if available. */}
+            {discussions.length === 0 ? (
+              <p>No discussions yet.</p>
+            ) : (
+              discussions.map((discussion) => (
+                <div key={discussion.id} className="discussion-item">
+                  <img src={discussion.avatar} alt={discussion.name} className="discussion-avatar" />
+                  <div className="discussion-content">
+                    <div className="discussion-header">
+                      <h5>{discussion.name}</h5>
+                      <span className="discussion-topic">{discussion.topic}</span>
+                    </div>
+                    <p className="discussion-text">
+                      {discussion.question || discussion.comment}
+                    </p>
+                    <div className="discussion-actions">
+                      {discussion.replies && (
+                        <a href="#" className="discussion-link">Reply {discussion.replies} replies</a>
+                      )}
+                      {discussion.likes && (
+                        <a href="#" className="discussion-link">{discussion.likes} likes</a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          
+          <div className="join-discussion">
+            <img src="https://via.placeholder.com/32x32/ec4899/ffffff?text=SJ" alt="You" className="user-avatar" />
+            <input 
+              type="text" 
+              placeholder="Join the discussion..." 
+              className="discussion-input"
+              value={newDiscussion}
+              onChange={(e) => setNewDiscussion(e.target.value)}
+            />
+            <button 
+              className="post-btn"
+              onClick={handlePostDiscussion}
+            >Post</button>
+          </div>
+        </div>
+
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h3>AI Summary</h3>
+          </div>
+          <div className="materials-list">
+            <textarea
+              placeholder="Paste text to summarize (placeholder only)"
+              rows="4"
+              className="form-control"
+              value={aiSummary}
+              onChange={(e) => setAiSummary(e.target.value)}
+            ></textarea>
+            <button
+              className="action-btn"
+              style={{ marginTop: 10 }}
+              onClick={() => {
+                // TODO: Integrate with backend/AI API for summary
+                openModal({ type: 'info', title: 'Coming Soon', message: 'AI summary feature coming soon!' });
+              }}
+            >Generate Summary</button>
+          </div>
+        </div>
+
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h3>Suggestion Box</h3>
+          </div>
+          <div className="materials-list">
+            <textarea
+              placeholder="Share your feedback or suggestions"
+              rows="3"
+              className="form-control"
+              value={suggestion}
+              onChange={(e) => setSuggestion(e.target.value)}
+            ></textarea>
+            <button
+              className="action-btn"
+              style={{ marginTop: 10 }}
+              onClick={async () => {
+                if (suggestion.trim()) {
+                  try {
+                    const payload = {
+                      name: user.name,
+                      suggestion,
+                      classLevel: selectedClass
+                    };
+                    const res = await fetch('http://localhost:5000/api/suggestions', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(payload)
+                    });
+                    if (res.ok) {
+                      setSuggestion('');
+                      openModal({ type: 'success', title: 'Submitted', message: 'Suggestion submitted!' });
+                    } else {
+                      openModal({ type: 'error', title: 'Failed', message: 'Failed to submit suggestion.' });
+                    }
+                  } catch (err) {
+                    openModal({ type: 'error', title: 'Failed', message: 'Failed to submit suggestion.' });
+                  }
+                }
+              }}
+            >Submit Suggestion</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMyMaterials = () => (
+    <div className="page-content">
+      <h2>My Materials</h2>
+      <div className="materials-grid">
+        {materials.length === 0 ? (
+          <p>No materials for your class yet.</p>
+        ) : (
+          materials.map((material) => (
+            <MaterialCard
+              key={material._id}
+              material={material}
+              user={user}
+              onDownload={handleDownloadMaterial}
+              onShare={handleShareMaterial}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  const renderDownloads = () => (
+    <div className="page-content">
+      <h2>Downloads</h2>
+      <div className="downloads-list">
+        {downloadedMaterials.length === 0 ? (
+          <p>No downloads yet.</p>
+        ) : (
+          downloadedMaterials.map((material) => (
+            <div key={material._id} className="download-item">
+              <div className="material-icon" style={{ color: getFileColor(material.type) }}>
+                {getFileIcon(material.type)}
+              </div>
+              <div className="download-info">
+                <h4>{material.title}</h4>
+                <p>Downloaded: {material.downloadDate}</p>
+              </div>
+              <div className="download-actions">
+                <button onClick={() => handleDownloadMaterial(material)}>Re-download</button>
+                <button onClick={() => handleRemoveDownload(material._id)}>Remove</button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  // Remove Saved Items tab and all related code
+
+  const renderDiscussions = () => (
+    <div className="page-content">
+      <h2>Discussions</h2>
+      <div className="discussions-page">
+        <div className="discussion-form">
+          <textarea placeholder="Start a new discussion..." rows="4"></textarea>
+          <button className="submit-btn">Post Discussion</button>
+        </div>
+        <div className="discussions-list">
+          {/* No dummy discussions. Render real discussions if available. */}
+          {discussions.length === 0 ? (
+            <p>No discussions yet.</p>
+          ) : (
+            discussions.map((discussion) => (
+              <div key={discussion.id} className="discussion-post">
+                <img src={discussion.avatar} alt={discussion.name} className="discussion-avatar" />
+                <div className="discussion-content">
+                  <div className="discussion-header">
+                    <h5>{discussion.name}</h5>
+                    <span className="discussion-time">{discussion.time || ''}</span>
+                  </div>
+                  <p className="discussion-text">
+                    {discussion.question || discussion.comment}
+                  </p>
+                  <div className="discussion-actions">
+                    <button>Like</button>
+                    <button>Reply</button>
+                    <button>Share</button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSchedule = () => (
+    <div className="page-content">
+      <h2>Schedule</h2>
+      <div className="schedule-calendar">
+        <div className="calendar-header">
+          <h3>This Week</h3>
+        </div>
+        <div className="schedule-items">
+          <div className="schedule-item">
+            <div className="schedule-time">9:00 AM</div>
+            <div className="schedule-class">Mathematics - Advanced Calculus</div>
+          </div>
+          <div className="schedule-item">
+            <div className="schedule-time">11:00 AM</div>
+            <div className="schedule-class">Physics - Laboratory Session</div>
+          </div>
+          <div className="schedule-item">
+            <div className="schedule-time">2:00 PM</div>
+            <div className="schedule-class">History - World War II Analysis</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderProgress = () => (
+    <div className="page-content">
+      <h2>Progress</h2>
+      <div className="progress-overview">
+        <div className="progress-card">
+          <h4>Mathematics</h4>
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: '85%' }}></div>
+          </div>
+          <span>85% Complete</span>
+        </div>
+        <div className="progress-card">
+          <h4>Physics</h4>
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: '72%' }}></div>
+          </div>
+          <span>72% Complete</span>
+        </div>
+        <div className="progress-card">
+          <h4>History</h4>
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: '90%' }}></div>
+          </div>
+          <span>90% Complete</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return renderDashboard();
+      case 'materials':
+        return renderMyMaterials();
+      case 'downloads':
+        return renderDownloads();
+      case 'discussions':
+        return renderDiscussions();
+      case 'schedule':
+        return renderSchedule();
+      case 'progress':
+        return renderProgress();
+      default:
+        return renderDashboard();
+    }
+  };
+
+  return (
+    <ErrorBoundary>
+      <div className="dashboard-container">
+        <Sidebar 
+          userType={user.type || 'student'} 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+          user={user}
+        />
+        <div className="main-content">
+          <div style={{ padding: '16px 24px', fontWeight: 600, fontSize: 20 }}>
+            {user.type === 'staff'
+              ? `Welcome ${user.id},`
+              : `Welcome ${user.name},`}
+          </div>
+          <Header userType={user.type || 'student'} userName={user.name} notificationCount={notificationCount} />
+          {renderContent()}
+          <Modal isOpen={modal.isOpen} title={modal.title} message={modal.message} type={modal.type} onClose={closeModal} actions={modal.actions} />
+        </div>
+      </div>
+    </ErrorBoundary>
+  );
+};
+
+export default StudentDashboard;

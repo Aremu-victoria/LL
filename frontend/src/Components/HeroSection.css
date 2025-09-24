@@ -1,0 +1,17 @@
+@media (max-width: 600px) {
+  .hero-section {
+    min-height: 70vh;
+  }
+  .hero-section h1 {
+    font-size: 2rem !important;
+    width: 100% !important;
+  }
+  .hero-section p {
+    width: 100% !important;
+    font-size: 1rem !important;
+  }
+  .hero-section .hero-buttons {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+}
