@@ -285,18 +285,18 @@ exports.inviteStaff = async (req, res) => {
       console.error('[inviteStaff] Transporter verify failed:', verifyErr);
       return res.status(500).json({ error: 'Email service verification failed.', details: verifyErr.message });
     }
-    const loginUrl = `${process.env.FRONTEND_URL || 'https://ll-mw69.onrender.com/'}/staff-login`;
+    const loginUrl = `${process.env.FRONTEND_URL || 'https://learnl.vercel.app/'}/staff-login`;
     await transporter.sendMail({
       from: process.env.MAIL_USER,
       to: email,
       subject: `Your ${type} account access - LearnLink`,
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #1A2A80; margin: 0;">EduHub</h1>
+                <h1 style="color: #1A2A80; margin: 0;">Learn Link</h1>
                 <p style="color: #666; margin: 5px 0;">Educational Portal</p>
               </div>
               
-              <h2 style="color: #333;">Welcome to EduHub!</h2>
+              <h2 style="color: #333;">Welcome to Learn Link!</h2>
               <p>Your ${type} account has been created successfully.</p>
               
               <div style="background-color: #f8f9fa; padding: 25px; border-radius: 10px; margin: 25px 0; border-left: 4px solid #1A2A80;">
@@ -309,7 +309,7 @@ exports.inviteStaff = async (req, res) => {
               </div>
               
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${loginUrl}" style="background-color: #1A2A80; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Login to EduHub</a>
+                <a href="${loginUrl}" style="background-color: #1A2A80; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Login to Learn Link</a>
               </div> 
               
               <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
