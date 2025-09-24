@@ -285,7 +285,7 @@ exports.inviteStaff = async (req, res) => {
       console.error('[inviteStaff] Transporter verify failed:', verifyErr);
       return res.status(500).json({ error: 'Email service verification failed.', details: verifyErr.message });
     }
-    const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/staff-login`;
+    const loginUrl = `${process.env.FRONTEND_URL || 'https://ll-mw69.onrender.com/'}/staff-login`;
     await transporter.sendMail({
       from: process.env.MAIL_USER,
       to: email,
@@ -358,7 +358,7 @@ exports.requestPasswordReset = async (req, res) => {
       },
     });
 
-    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${token}`;
+    const resetLink = `${process.env.FRONTEND_URL || 'https://ll-mw69.onrender.com/'}/reset-password/${token}`;
     await transporter.sendMail({
       from: process.env.MAIL_USER,
       to: user.email,
