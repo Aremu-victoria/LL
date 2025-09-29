@@ -18,6 +18,7 @@ const TeacherDashboard = () => {
   });
   const [materials, setMaterials] = useState([]);
   const [students, setStudents] = useState([]);
+  const [staff, setStaff] = useState([]);
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedClassLevel, setSelectedClassLevel] = useState('SS1');
@@ -172,6 +173,7 @@ const TeacherDashboard = () => {
       ]);
       setMaterials(mats);
       setStudents(studs.filter(s => s.type === 'student'));
+      setStaff(studs.filter(s => s.type === 'teacher'));
       setCourses(crs);
     } catch (e) {
       console.error('Failed to fetch data', e);
@@ -465,56 +467,99 @@ const TeacherDashboard = () => {
         </div>
       </div>
 
-      {userRole === 'superadmin' && (
-        <div className="dashboard-section" style={{ marginTop: '24px' }}>
-          <div className="section-header">
-            <h3>Create Staff Account</h3>
+      {false && userRole === 'superadmin' && null}
+    </div>
+  );
+
+  // Superadmin-only: view all staff
+  const renderStaffList = () => (
+    <div className="page-content">
+      <h2>All Staff</h2>
+      <div className="students-list">
+        {staff.length === 0 && <p>No staff yet.</p>}
+        {staff.map(s => (
+          <div key={s._id} className="student-card">
+            <div className="student-info">
+              <h4>{s.firstName || 'Teacher'} {s.lastName || ''}</h4>
+              <p>{s.email}</p>
+              <span className="last-activity">{s.isActive ? 'Active' : 'Archived'}</span>
+            </div>
+            <div className="student-actions">
+              <button onClick={async () => {
+                const firstName = prompt('First name', s.firstName || '') || s.firstName;
+                const lastName = prompt('Last name', s.lastName || '') || s.lastName;
+                const email = prompt('Email', s.email || '') || s.email;
+                const phone = prompt('Phone', s.phone || '') || s.phone;
+                try {
+                  const res = await fetch(`https://ll-mw69.onrender.com/api/students/${s._id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ firstName, lastName, email, phone })
+                  });
+                  if (res.ok) fetchAll();
+                } catch {}
+              }}>Edit</button>
+              <button className="delete-btn" onClick={async () => {
+                const ok = await confirmAction({ title: 'Delete Staff', message: 'Delete this staff account?', confirmLabel: 'Delete', type: 'warning' });
+                if (!ok) return;
+                await fetch(`https://ll-mw69.onrender.com/api/staff/${s._id}`, { method: 'DELETE' });
+                fetchAll();
+              }}>Delete</button>
+            </div>
           </div>
-          <div className="materials-list">
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const form = e.currentTarget;
-              const firstName = form.querySelector('#sa-firstName').value;
-              const lastName = form.querySelector('#sa-lastName').value;
-              const email = form.querySelector('#sa-email').value;
-              if (!email) { openModal({ type: 'error', title: 'Error', message: 'Email is required' }); return; }
-              try {
-                const res = await fetch('https://ll-mw69.onrender.com/api/superadmin/invite-staff', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ email, firstName, lastName, type: 'teacher' })
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Failed to invite');
-                openModal({ type: 'success', title: 'Invitation Sent', message: data.message || 'Invitation sent' });
-                form.reset();
-              } catch (err) {
-                openModal({ type: 'error', title: 'Failed', message: err.message || 'Failed to invite' });
-              }
-            }} className="d-flex flex-column gap-2" style={{ maxWidth: 520 }}>
-              <div className="row">
-                <div className="col">
-                  <label className="form-label" htmlFor="sa-firstName">First Name</label>
-                  <input id="sa-firstName" className="form-control" placeholder="Optional" />
-                </div>
-                <div className="col">
-                  <label className="form-label" htmlFor="sa-lastName">Last Name</label>
-                  <input id="sa-lastName" className="form-control" placeholder="Optional" />
-                </div>
-              </div>
-              <div>
-                <label className="form-label" htmlFor="sa-email">Email Address</label>
-                <input id="sa-email" type="email" className="form-control" placeholder="user@example.com" required />
-              </div>
-              <div>
-                <label className="form-label">User Type</label>
-                <input type="text" className="form-control" value="Teacher" disabled style={{backgroundColor: '#f8f9fa', color: '#6c757d'}} />
-              </div>
-              <button className="btn" style={{backgroundColor: '#1A2A80', color: 'white'}}>Invite Staff</button>
-            </form>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Superadmin-only: invite staff
+  const renderInviteStaff = () => (
+    <div className="page-content">
+      <h2>Add Staff</h2>
+      <div className="materials-list">
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          const form = e.currentTarget;
+          const firstName = form.querySelector('#sa-firstName').value;
+          const lastName = form.querySelector('#sa-lastName').value;
+          const email = form.querySelector('#sa-email').value;
+          if (!email) { openModal({ type: 'error', title: 'Error', message: 'Email is required' }); return; }
+          try {
+            const res = await fetch('https://ll-mw69.onrender.com/api/superadmin/invite-staff', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, firstName, lastName, type: 'teacher' })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to invite');
+            openModal({ type: 'success', title: 'Invitation Sent', message: data.message || 'Invitation sent' });
+            form.reset();
+            fetchAll();
+          } catch (err) {
+            openModal({ type: 'error', title: 'Failed', message: err.message || 'Failed to invite' });
+          }
+        }} className="d-flex flex-column gap-2" style={{ maxWidth: 520 }}>
+          <div className="row">
+            <div className="col">
+              <label className="form-label" htmlFor="sa-firstName">First Name</label>
+              <input id="sa-firstName" className="form-control" placeholder="Optional" />
+            </div>
+            <div className="col">
+              <label className="form-label" htmlFor="sa-lastName">Last Name</label>
+              <input id="sa-lastName" className="form-control" placeholder="Optional" />
+            </div>
           </div>
-        </div>
-      )}
+          <div>
+            <label className="form-label" htmlFor="sa-email">Email Address</label>
+            <input id="sa-email" type="email" className="form-control" placeholder="user@example.com" required />
+          </div>
+          <div>
+            <label className="form-label">User Type</label>
+            <input type="text" className="form-control" value="Teacher" disabled style={{backgroundColor: '#f8f9fa', color: '#6c757d'}} />
+          </div>
+          <button className="btn" style={{backgroundColor: '#1A2A80', color: 'white'}}>Create Teacher Account</button>
+        </form>
+      </div>
     </div>
   );
 
@@ -787,6 +832,12 @@ const TeacherDashboard = () => {
         return renderComments();
       case 'students':
         return renderStudents();
+      case 'staff_list':
+        return renderStaffList();
+      case 'invite_staff':
+        return renderInviteStaff();
+      case 'add_student':
+        return renderAddStudent();
       default:
         return renderDashboard();
     }
@@ -795,7 +846,7 @@ const TeacherDashboard = () => {
   return (
     <div className="dashboard-container" style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar 
-        userType="teacher" 
+        userType={user.type === 'superadmin' ? 'superadmin' : 'teacher'} 
         activeTab={activeTab} 
         onTabChange={setActiveTab}
         user={user}
