@@ -23,6 +23,7 @@ const TeacherDashboard = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedClassLevel, setSelectedClassLevel] = useState('SS1');
   const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   // Modal state
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', actions: [] });
@@ -522,9 +523,10 @@ const TeacherDashboard = () => {
           const form = e.currentTarget;
           const firstName = form.querySelector('#sa-firstName').value;
           const lastName = form.querySelector('#sa-lastName').value;
-          const email = form.querySelector('#sa-email').value;
+          const email = (form.querySelector('#sa-email').value || '').trim();
           if (!email) { openModal({ type: 'error', title: 'Error', message: 'Email is required' }); return; }
           try {
+            setInviteLoading(true);
             const res = await fetch('https://ll-mw69.onrender.com/api/superadmin/invite-staff', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -537,6 +539,8 @@ const TeacherDashboard = () => {
             fetchAll();
           } catch (err) {
             openModal({ type: 'error', title: 'Failed', message: err.message || 'Failed to invite' });
+          } finally {
+            setInviteLoading(false);
           }
         }} className="d-flex flex-column gap-2" style={{ maxWidth: 520 }}>
           <div className="row">
@@ -557,7 +561,9 @@ const TeacherDashboard = () => {
             <label className="form-label">User Type</label>
             <input type="text" className="form-control" value="Teacher" disabled style={{backgroundColor: '#f8f9fa', color: '#6c757d'}} />
           </div>
-          <button className="btn" style={{backgroundColor: '#1A2A80', color: 'white'}}>Create Teacher Account</button>
+          <button className="btn" disabled={inviteLoading} style={{backgroundColor: inviteLoading ? '#6b7280' : '#1A2A80', color: 'white', opacity: inviteLoading ? 0.85 : 1, cursor: inviteLoading ? 'not-allowed' : 'pointer'}}>
+            {inviteLoading ? 'Creating…' : 'Create Teacher Account'}
+          </button>
         </form>
       </div>
     </div>

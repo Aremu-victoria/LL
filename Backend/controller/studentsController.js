@@ -5,7 +5,6 @@ exports.downloadMaterialFile = async (req, res) => {
     const { mode, name } = req.query; 
     if (!publicId) return res.status(400).json({ error: 'No publicId provided' });
     const cloudinary = require('cloudinary').v2;
-
     const resource = await cloudinary.api.resource(publicId, { resource_type: 'auto' });
     if (!resource || !resource.secure_url) return res.status(404).json({ error: 'File not found' });
 
@@ -13,7 +12,7 @@ exports.downloadMaterialFile = async (req, res) => {
     const sanitize = (s = '') => String(s).replace(/[^a-z0-9\-_. ]/gi, '').replace(/\s+/g, ' ').trim();
     let baseName = sanitize(name) || sanitize(resource.original_filename) || sanitize(resource.filename) || 'material';
     if (!baseName) baseName = 'material';
-    nk
+
     const hasExt = /\.[A-Za-z0-9]{2,5}$/.test(baseName);
     let filename = baseName;
     if (format && (!hasExt || (hasExt && baseName.split('.').pop().toLowerCase() !== format))) {
@@ -232,14 +231,19 @@ exports.inviteStaff = async (req, res) => {
   try {
     const { email, firstName = 'Teacher', lastName = 'User', type = 'teacher' } = req.body;
     
+    // Normalize email early
+    const rawEmail = typeof email === 'string' ? email : '';
+    const normalizedEmail = rawEmail.trim().toLowerCase();
+    
    
-    if (!email) {
+    if (!normalizedEmail) {
       console.error('[inviteStaff] Missing email in request body');
       return res.status(400).json({ error: 'Email is required.' });
     }
     
     // Check if email already exists
-    const emailExists = await Student.findOne({ email });
+    const safeEmailPattern = new RegExp(`^${normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+    const emailExists = await Student.findOne({ email: safeEmailPattern });
     if (emailExists) {
       console.warn('[inviteStaff] Email already exists:', email);
       return res.status(409).json({ error: 'Email already exists.' });
@@ -261,7 +265,7 @@ exports.inviteStaff = async (req, res) => {
     const user = new Student({ 
       firstName, 
       lastName, 
-      email, 
+      email: normalizedEmail, 
       password: hashed, 
       uniqueId: uniqueId,
       type,
@@ -288,7 +292,7 @@ exports.inviteStaff = async (req, res) => {
     const loginUrl = `${process.env.FRONTEND_URL || 'https://learnl.vercel.app/'}/staff-login`;
     await transporter.sendMail({
       from: process.env.MAIL_USER,
-      to: email,
+      to: normalizedEmail,
       subject: `Your ${type} account access - LearnLink`,
       html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="text-align: center; margin-bottom: 30px;">
@@ -302,7 +306,7 @@ exports.inviteStaff = async (req, res) => {
               <div style="background-color: #f8f9fa; padding: 25px; border-radius: 10px; margin: 25px 0; border-left: 4px solid #1A2A80;">
                 <h3 style="margin-top: 0; color: #1A2A80;">Your Login Credentials:</h3>
                 <div style="margin: 15px 0;">
-                  <p style="margin: 8px 0;"><strong>Email:</strong> <span style="color: #1A2A80;">${email}</span></p>
+                  <p style="margin: 8px 0;"><strong>Email:</strong> <span style="color: #1A2A80;">${normalizedEmail}</span></p>
                   <p style="margin: 8px 0;"><strong>Your ID:</strong> <span style="background-color: #1A2A80; color: white; padding: 6px 12px; border-radius: 6px; font-family: monospace; font-weight: bold;">${uniqueId}</span></p>
                   <p style="margin: 8px 0;"><strong>Temporary Password:</strong> <span style="font-family: monospace;">${tempPassword}</span></p>
                 </div>
@@ -326,7 +330,7 @@ exports.inviteStaff = async (req, res) => {
       message: `${type.charAt(0).toUpperCase() + type.slice(1)} account created successfully!`, 
       userId: user._id,
       uniqueId: uniqueId,
-      email: email
+      email: normalizedEmail
     });
   } catch (err) {
     console.error('[inviteStaff] Staff creation error:', err);
@@ -358,7 +362,7 @@ exports.requestPasswordReset = async (req, res) => {
       },
     });
 
-    const resetLink = `${process.env.FRONTEND_URL || 'https://ll-mw69.onrender.com/'}/reset-password/${token}`;
+    const resetLink = `https://ll-mw69.onrender.com/reset-password/${token}`;
     await transporter.sendMail({
       from: process.env.MAIL_USER,
       to: user.email,
