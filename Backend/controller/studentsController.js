@@ -238,7 +238,7 @@ exports.inviteStaff = async (req, res) => {
    
     if (!normalizedEmail) {
       console.error('[inviteStaff] Missing email in request body');
-      return res.status(400).json({ error: 'Email is required.' });
+      return res.status(400).json({ error: 'Email is required.' })
     }
     
     // Check if email already exists
@@ -285,6 +285,7 @@ exports.inviteStaff = async (req, res) => {
     });
     try {
       await transporter.verify();
+      console.log(process.env.MAIL_USER, process.env.MAIL_PASS)
     } catch (verifyErr) {
       console.error('[inviteStaff] Transporter verify failed:', verifyErr);
       return res.status(500).json({ error: 'Email service verification failed.', details: verifyErr.message });
@@ -326,6 +327,7 @@ exports.inviteStaff = async (req, res) => {
     });
 
     console.log('[inviteStaff] Invite sent to:', email, 'uniqueId:', uniqueId);
+    console.log(process.env.MAIL_USER, process.env.MAIL_PASS)
     res.json({ 
       message: `${type.charAt(0).toUpperCase() + type.slice(1)} account created successfully!`, 
       userId: user._id,

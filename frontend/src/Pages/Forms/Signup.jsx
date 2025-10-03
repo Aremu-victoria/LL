@@ -71,6 +71,7 @@ const Signup = () => {
   return (
     <div
       className="d-flex justify-content-center align-items-center min-vh-100 py-4 position-relative"
+      style={{backgroundColor:"#dbeafe"}}
     >
       <div
         style={{
@@ -84,7 +85,15 @@ const Signup = () => {
           zIndex: 1,
         }}
       />
-      <div className="card p-4 shadow rounded" style={{ width: '400px', zIndex: 2, position: 'relative' }}>
+      <div className="card p-4 shadow rounded" style={{ width: '500px', zIndex: 2, position: 'relative' }}>
+      <button
+            type="button"
+            className="btn btn-link signin-back-arrow position-absolute top-0 start-0 m-2 p-0"
+            aria-label="Go back"
+            onClick={() => navigate(-1)}
+          >
+            <span aria-hidden="true" style={{fontSize: '1.7rem', color: '#1A2A80'}}>&#8592;</span>
+          </button>
   {serverError && <div className="alert alert-danger animate__animated animate__fadeOut">{serverError}</div>}
   {successMsg && <div className="alert alert-success animate__animated animate__heartBeat">{successMsg}</div>}
         <div className="text-center fw-bold fs-4 mb-3">Student Sign up</div>

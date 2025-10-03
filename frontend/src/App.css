@@ -1,7 +1,7 @@
 
 /* Signin Page Styles */
 .signin-bg {
-	background: #fff;
+	background: #dbeafe;
 }
 .signin-card {
 	background: white;
@@ -13,7 +13,7 @@
 	width: 100%;
 }
 .signin-form-col {
-	min-height: 420px;
+	min-height: 520px;
 	padding: 2.5rem 2rem;
 }
 .signin-img-col {

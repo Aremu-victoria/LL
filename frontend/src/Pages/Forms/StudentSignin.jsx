@@ -63,13 +63,13 @@ const StudentSignin = () => {
             {successMsg && <div className="alert alert-success py-2">{successMsg}</div>}
             <form className="d-flex flex-column gap-3" onSubmit={formik.handleSubmit}>
               <div>
-                <label htmlFor="identifier" className="form-label fw-semibold">Username</label>
+                <label htmlFor="identifier" className="form-label fw-semibold">Email</label>
                 <input
                   name="identifier"
                   id="identifier"
                   type="text"
                   className={`form-control signin-input ${formik.touched.identifier && formik.errors.identifier ? 'is-invalid' : ''}`}
-                  placeholder="Tu usuario o correo"
+                  placeholder="Email"
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   value={formik.values.identifier}
@@ -86,7 +86,7 @@ const StudentSignin = () => {
                   id="password"
                   type="password"
                   className={`form-control signin-input ${formik.touched.password && formik.errors.password ? 'is-invalid' : ''}`}
-                  placeholder="Tu contraseña"
+                  placeholder="Password"
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   value={formik.values.password}
@@ -104,7 +104,7 @@ const StudentSignin = () => {
           </div>
         </div>
         {/* Right: Image/Branding */}
-        <div className="signin-img-col d-none d-md-flex flex-column justify-content-center align-items-center position-relative" style={{flex: 1, background: '#23a6e0', minWidth: 340, minHeight: 420}}>
+        <div className="signin-img-col d-none d-md-flex flex-column justify-content-center align-items-center position-relative" style={{flex: 1, background: '#1A2A80', minWidth: 340, minHeight: 420}}>
           <div className="signin-logo mb-3 mt-4">
 
             <span style={{fontWeight: 700, fontSize: '2rem', color: 'white', letterSpacing: '1px'}}>LearnLink</span>
