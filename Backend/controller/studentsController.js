@@ -125,6 +125,7 @@ exports.signin = async (req, res) => {
     }
 };
 const mongoose = require('mongoose');
+const { error } = require('console');
 const Student = mongoose.model('Student');
 const Course = mongoose.model('Course');
 const Material = mongoose.model('Material');
@@ -231,11 +232,13 @@ exports.inviteStaff = async (req, res) => {
   try {
     const { email, firstName = 'Teacher', lastName = 'User', type = 'teacher' } = req.body;
     
-    // Normalize email early
+
     const rawEmail = typeof email === 'string' ? email : '';
     const normalizedEmail = rawEmail.trim().toLowerCase();
+    const env = process.env.NODE_ENV || 'development';
+    console.info(`[inviteStaff][${env}] Request received`, { email: normalizedEmail, type });
     
-   
+  
     if (!normalizedEmail) {
       console.error('[inviteStaff] Missing email in request body');
       return res.status(400).json({ error: 'Email is required.' })
@@ -248,6 +251,7 @@ exports.inviteStaff = async (req, res) => {
       console.warn('[inviteStaff] Email already exists:', email);
       return res.status(409).json({ error: 'Email already exists.' });
     }
+    
     
   
     let uniqueId;
@@ -272,6 +276,7 @@ exports.inviteStaff = async (req, res) => {
       isActive: true 
     });
     await user.save();
+    console.info(`[inviteStaff][${env}] Staff user created`, { userId: user._id.toString(), email: normalizedEmail, uniqueId, type });
 
     const mailUser = process.env.MAIL_USER;
     const mailPass = process.env.MAIL_PASS;
@@ -285,7 +290,7 @@ exports.inviteStaff = async (req, res) => {
     });
     try {
       await transporter.verify();
-      console.log(process.env.MAIL_USER, process.env.MAIL_PASS)
+      console.info(`[inviteStaff][${env}] Email transporter verified`);
     } catch (verifyErr) {
       console.error('[inviteStaff] Transporter verify failed:', verifyErr);
       return res.status(500).json({ error: 'Email service verification failed.', details: verifyErr.message });
@@ -326,8 +331,7 @@ exports.inviteStaff = async (req, res) => {
             </div>`,
     });
 
-    console.log('[inviteStaff] Invite sent to:', email, 'uniqueId:', uniqueId);
-    console.log(process.env.MAIL_USER, process.env.MAIL_PASS)
+    console.info(`[inviteStaff][${env}] Invite email sent`, { to: normalizedEmail, uniqueId });
     res.json({ 
       message: `${type.charAt(0).toUpperCase() + type.slice(1)} account created successfully!`, 
       userId: user._id,

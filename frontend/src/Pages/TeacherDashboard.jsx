@@ -527,30 +527,43 @@ const TeacherDashboard = () => {
           if (!email) { openModal({ type: 'error', title: 'Error', message: 'Email is required' }); return; }
           try {
             setInviteLoading(true);
-            const res = await fetch('https://ll-mw69.onrender.com/api/superadmin/invite-staff', {
+            const endpoint = 'https://ll-mw69.onrender.com/api/superadmin/invite-staff';
+            const payload = { email, firstName, lastName, type: 'teacher' };
+            const env = process.env.NODE_ENV || (window?.location?.hostname?.includes('localhost') ? 'development' : 'production');
+            console.groupCollapsed(`[inviteStaff][${env}] Submit`);
+            console.info('[inviteStaff] Request', { url: endpoint, method: 'POST', body: payload });
+            const start = Date.now();
+            const res = await fetch(endpoint, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, firstName, lastName, type: 'teacher' })
+              body: JSON.stringify(payload)
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to invite');
+            const durationMs = Date.now() - start;
+            if (!res.ok) {
+              console.error('[inviteStaff] Error Response', { status: res.status, statusText: res.statusText, durationMs, data });
+              throw new Error(data?.error || data?.message || `Failed to invite (status ${res.status})`);
+            }
+            console.info('[inviteStaff] Success Response', { status: res.status, durationMs, data });
             openModal({ type: 'success', title: 'Invitation Sent', message: data.message || 'Invitation sent' });
             form.reset();
             fetchAll();
           } catch (err) {
-            openModal({ type: 'error', title: 'Failed', message: err.message || 'Failed to invite' });
+            console.error('[inviteStaff] Caught Exception', { message: err?.message, stack: err?.stack });
+            openModal({ type: 'error', title: 'Failed', message: err?.message || 'Failed to invite' });
           } finally {
             setInviteLoading(false);
+            console.groupEnd?.();
           }
         }} className="d-flex flex-column gap-2" style={{ maxWidth: 520 }}>
           <div className="row">
             <div className="col">
               <label className="form-label" htmlFor="sa-firstName">First Name</label>
-              <input id="sa-firstName" className="form-control" placeholder="Optional" />
+              <input id="sa-firstName" className="form-control" placeholder="First Name" />
             </div>
             <div className="col">
               <label className="form-label" htmlFor="sa-lastName">Last Name</label>
-              <input id="sa-lastName" className="form-control" placeholder="Optional" />
+              <input id="sa-lastName" className="form-control" placeholder="Last Name" />
             </div>
           </div>
           <div>
