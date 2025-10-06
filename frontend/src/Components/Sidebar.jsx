@@ -7,18 +7,28 @@ const Sidebar = ({ userType, activeTab, onTabChange, user, courses = [], selecte
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleLogout = () => {
-    navigate('/');
-  };
-
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('userRole');
+      if (userType === 'student') {
+        navigate('/student-login', { replace: true });
+      } else {
+        navigate('/staff-login', { replace: true });
+      }
+    } catch {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('userRole');
+      navigate('/', { replace: true });
+    }
   };
 
   const teacherMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
-    { id: 'upload', label: 'Upload Materials', icon: '📤' },
-    { id: 'materials', label: 'My Materials', icon: '📚' },
-    { id: 'saved', label: 'Saved Items', icon: '💾' },
+    { id: 'materials', label: 'My Materials', icon: '📁' },
+    { id: 'downloads', label: 'Downloads', icon: '⬇️' },
+    { id: 'discussions', label: 'Discussions', icon: '💬' },
     { id: 'comments', label: 'Comments', icon: '💬' },
     { id: 'students', label: 'Students', icon: '👥' }
   ];
