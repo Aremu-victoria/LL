@@ -8,6 +8,7 @@ const Signin = () => {
   const [serverError, setServerError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loginType, setLoginType] = useState('student'); // 'student' | 'staff' | 'admin'
+  const [loading, setLoading] = useState(false); // Loader state
 
   useEffect(() => {
     let timer;
@@ -19,8 +20,9 @@ const Signin = () => {
     }
     return () => clearTimeout(timer);
   }, [serverError, successMsg]);
-  
+
   const navigate = useNavigate();
+
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -35,8 +37,9 @@ const Signin = () => {
     onSubmit: async values => {
       setServerError('');
       setSuccessMsg('');
+      setLoading(true); // Start loader
+
       try {
-        // Prepare data based on login type
         let loginData;
         if (loginType === 'admin') {
           loginData = { email: values.email, password: values.password };
@@ -45,19 +48,19 @@ const Signin = () => {
         } else {
           loginData = { email: values.email, uniqueId: values.uniqueId };
         }
-          
-        const res = await axios.post('https://ll-mw69.onrender.com/api/signin', loginData);
+
+        const res = await axios.post('https://ll-2.onrender.com/api/signin', loginData);
         setSuccessMsg(res.data.message || 'Login successful!');
+
         if (res.data.token) {
           localStorage.setItem('token', res.data.token);
           const userRole = res.data.user?.type || 'student';
           localStorage.setItem('userRole', userRole);
         }
+
         setTimeout(() => {
           const userRole = res.data.user?.type || 'student';
-          if (userRole === 'superadmin') {
-            navigate('/teacher-dashboard');
-          } else if (userRole === 'teacher') {
+          if (userRole === 'superadmin' || userRole === 'teacher') {
             navigate('/teacher-dashboard');
           } else {
             navigate('/student-dashboard');
@@ -70,6 +73,7 @@ const Signin = () => {
           setServerError('An unexpected error occurred.');
         }
       }
+      setLoading(false); // Stop loader
     },
   });
 
@@ -78,9 +82,9 @@ const Signin = () => {
       <div className="card p-4 shadow rounded" style={{ width: '400px' }}>
         {serverError && <div className="alert alert-danger">{serverError}</div>}
         {successMsg && <div className="alert alert-success">{successMsg}</div>}
-        
+
         <div className="text-center fw-bold fs-4 mb-3">Welcome to EduHub!</div>
-        
+
         {/* Login Type Toggle */}
         <div className="d-flex mb-4 gap-2">
           <button 
@@ -122,12 +126,32 @@ const Signin = () => {
               onBlur={formik.handleBlur}
               value={formik.values.email}
             />
-            {formik.touched.email && formik.errors.email ? (
+            {formik.touched.email && formik.errors.email && (
               <div className="invalid-feedback d-block">{formik.errors.email}</div>
-            ) : null}
+            )}
           </div>
 
-          {loginType !== 'student' ? (
+          {loginType !== 'admin' && (
+            <div>
+              <label htmlFor="uniqueId" className="form-label">Unique ID</label>
+              <input
+                name="uniqueId"
+                id="uniqueId"
+                type="text"
+                className={`form-control ${formik.touched.uniqueId && formik.errors.uniqueId ? 'is-invalid' : ''}`}
+                placeholder="Enter your unique ID"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.uniqueId}
+                style={{ fontFamily: 'monospace', textTransform: 'uppercase' }}
+              />
+              {formik.touched.uniqueId && formik.errors.uniqueId && (
+                <div className="invalid-feedback d-block">{formik.errors.uniqueId}</div>
+              )}
+            </div>
+          )}
+
+          {loginType !== 'student' && (
             <div>
               <label htmlFor="password" className="form-label">Password</label>
               <input
@@ -140,57 +164,19 @@ const Signin = () => {
                 onBlur={formik.handleBlur}
                 value={formik.values.password}
               />
-              {formik.touched.password && formik.errors.password ? (
+              {formik.touched.password && formik.errors.password && (
                 <div className="invalid-feedback d-block">{formik.errors.password}</div>
-              ) : null}
-            </div>
-          ) : (
-            <div>
-              <label htmlFor="uniqueId" className="form-label">Unique ID</label>
-              <input
-                name="uniqueId"
-                id="uniqueId"
-                type="text"
-                className={`form-control ${formik.touched.uniqueId && formik.errors.uniqueId ? 'is-invalid' : ''}`}
-                placeholder="Enter your unique ID"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.uniqueId}
-                style={{fontFamily: 'monospace', textTransform: 'uppercase'}}
-              />
-              {formik.touched.uniqueId && formik.errors.uniqueId ? (
-                <div className="invalid-feedback d-block">{formik.errors.uniqueId}</div>
-              ) : null}
-              <small className="text-muted">Check your email for your unique ID</small>
-            </div>
-          )}
-
-          {loginType === 'staff' && (
-            <div>
-              <label htmlFor="uniqueId" className="form-label">Unique ID</label>
-              <input
-                name="uniqueId"
-                id="uniqueId"
-                type="text"
-                className={`form-control ${formik.touched.uniqueId && formik.errors.uniqueId ? 'is-invalid' : ''}`}
-                placeholder="Enter your unique ID"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.uniqueId}
-                style={{fontFamily: 'monospace', textTransform: 'uppercase'}}
-              />
-              {formik.touched.uniqueId && formik.errors.uniqueId ? (
-                <div className="invalid-feedback d-block">{formik.errors.uniqueId}</div>
-              ) : null}
+              )}
             </div>
           )}
 
           <button 
             type="submit" 
             className="btn btn-lg w-100 mt-3" 
-            style={{backgroundColor: "#1A2A80", color: "white"}}
+            style={{backgroundColor: "#1A2A80", color: "white", position: "relative"}}
+            disabled={loading}
           >
-            <i className="bi bi-box-arrow-in-right me-2"></i>
+            {loading && <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>}
             {loginType === 'admin' ? 'Sign In as Admin' : loginType === 'staff' ? 'Sign In as Staff' : 'Sign In as Student'}
           </button>
         </form>
@@ -198,7 +184,7 @@ const Signin = () => {
         {loginType !== 'student' && (
           <a className="d-block text-end text-primary mt-2" href="/forgot-password">Forgot Password?</a>
         )}
-        
+
         <div className="text-center mt-4">
           <small className="text-muted">
             {loginType === 'student' ? "Students: Use your email and issued ID." : loginType === 'staff' ? "Staff: Use email, ID and password." : "Super Admin access only"}
@@ -208,6 +194,5 @@ const Signin = () => {
     </div>
   );
 }
-
 
 export default Signin;

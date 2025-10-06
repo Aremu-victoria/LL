@@ -9,6 +9,7 @@ const StudentSignin = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [loading, setLoading] = useState(false); // loader state
 
   useEffect(() => {
     let timer;
@@ -25,19 +26,24 @@ const StudentSignin = () => {
       password: Yup.string().required('Password is required'),
     }),
     onSubmit: async values => {
+      setLoading(true); // start loader
       try {
-        const res = await axios.post('https://ll-mw69.onrender.com/api/signin', { identifier: values.identifier, password: values.password });
+        const res = await axios.post('https://ll-mw69.onrender.com/api/signin', { 
+          identifier: values.identifier, 
+          password: values.password 
+        });
         setSuccessMsg(res.data.message || 'Login successful!');
         if (res.data.token) {
           localStorage.setItem('token', res.data.token);
           const userRole = res.data.user?.type || 'student';
           localStorage.setItem('userRole', userRole);
-          // Store complete user data for dashboard use
           localStorage.setItem('userData', JSON.stringify(res.data.user));
         }
         setTimeout(() => navigate('/student-dashboard'), 800);
       } catch (err) {
         setServerError(err.response?.data?.error || 'Login failed');
+      } finally {
+        setLoading(false); // stop loader
       }
     }
   });
@@ -61,6 +67,7 @@ const StudentSignin = () => {
             <div className="text-center mb-4" style={{color: '#2196f3', fontWeight: 600, fontSize: '1.2rem'}}></div>
             {serverError && <div className="alert alert-danger py-2">{serverError}</div>}
             {successMsg && <div className="alert alert-success py-2">{successMsg}</div>}
+            
             <form className="d-flex flex-column gap-3" onSubmit={formik.handleSubmit}>
               <div>
                 <label htmlFor="identifier" className="form-label fw-semibold">Email</label>
@@ -75,12 +82,12 @@ const StudentSignin = () => {
                   value={formik.values.identifier}
                   style={{fontFamily: 'monospace'}}
                 />
-                {formik.touched.identifier && formik.errors.identifier ? (
+                {formik.touched.identifier && formik.errors.identifier && (
                   <div className="invalid-feedback d-block">{formik.errors.identifier}</div>
-                ) : null}
+                )}
               </div>
               <div>
-                <label htmlFor="password" className="form-label fw-semibold">password</label>
+                <label htmlFor="password" className="form-label fw-semibold">Password</label>
                 <input
                   name="password"
                   id="password"
@@ -91,22 +98,37 @@ const StudentSignin = () => {
                   onBlur={formik.handleBlur}
                   value={formik.values.password}
                 />
-                {formik.touched.password && formik.errors.password ? (
+                {formik.touched.password && formik.errors.password && (
                   <div className="invalid-feedback d-block">{formik.errors.password}</div>
-                ) : null}
+                )}
               </div>
-              <button type="submit" className="btn signin-btn w-100 mt-2">SIGN IN</button>
+              <button 
+                type="submit" 
+                className="btn signin-btn w-100 mt-2" 
+                disabled={loading} // disable while loading
+                style={{ backgroundColor: "#1A2A80", color: "white", position: "relative" }}
+
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  </>
+                ) : (
+                  "SIGN IN"
+                )}
+              </button>
             </form>
+
             <div className="text-center mt-3" style={{fontSize: '0.98rem'}}>
               Don't have an account?{' '}
-              <Link to="/Signup" className="signin-link text-primary fw-semibold ">SIGN UP</Link>
+              <Link to="/Signup" className="signin-link text-primary fw-semibold">SIGN UP</Link>
             </div>
           </div>
         </div>
+
         {/* Right: Image/Branding */}
         <div className="signin-img-col d-none d-md-flex flex-column justify-content-center align-items-center position-relative" style={{flex: 1, background: '#1A2A80', minWidth: 340, minHeight: 420}}>
           <div className="signin-logo mb-3 mt-4">
-
             <span style={{fontWeight: 700, fontSize: '2rem', color: 'white', letterSpacing: '1px'}}>LearnLink</span>
           </div>
           <div className="signin-img-circle position-relative d-flex align-items-center justify-content-center">
@@ -116,8 +138,6 @@ const StudentSignin = () => {
       </div>
     </div>
   );
+};
 
-
-}
 export default StudentSignin;
-         

@@ -14,7 +14,7 @@ const MaterialCard = ({ material, user, onDownload, onShare }) => {
     if (!comment.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(`https://ll-mw69.onrender.com/api/materials/${material._id}/reviews`, {
+      const res = await fetch(`https://ll-2.onrender.com/api/materials/${material._id}/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user: user.name, comment })
@@ -45,7 +45,7 @@ const MaterialCard = ({ material, user, onDownload, onShare }) => {
           onClick={() => {
             if (material.publicId) {
               // Download via backend endpoint for real document
-              window.open(`https://ll-mw69.onrender.com/api/materials/download/${material.publicId}`, '_blank');
+              window.open(`https://ll-2.onrender.com/api/materials/download/${material.publicId}`, '_blank');
             } else if (material.fileUrl) {
               // Fallback to direct link
               window.open(material.fileUrl, '_blank');

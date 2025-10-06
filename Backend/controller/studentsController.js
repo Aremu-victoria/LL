@@ -1,56 +1,76 @@
 
+// Single file download or view
 exports.downloadMaterialFile = async (req, res) => {
   try {
     const { publicId } = req.params;
-    const { mode, name } = req.query; 
-    if (!publicId) return res.status(400).json({ error: 'No publicId provided' });
-    const cloudinary = require('cloudinary').v2;
-    const resource = await cloudinary.api.resource(publicId, { resource_type: 'auto' });
-    if (!resource || !resource.secure_url) return res.status(404).json({ error: 'File not found' });
+    const { mode = "inline", name } = req.query;
 
-    const format = (resource.format || '').toLowerCase();
-    const sanitize = (s = '') => String(s).replace(/[^a-z0-9\-_. ]/gi, '').replace(/\s+/g, ' ').trim();
-    let baseName = sanitize(name) || sanitize(resource.original_filename) || sanitize(resource.filename) || 'material';
-    if (!baseName) baseName = 'material';
+    if (!publicId) {
+      return res.status(400).json({ error: "No publicId provided" });
+    }
+
+    const cloudinary = require("cloudinary").v2;
+    const resource = await cloudinary.api.resource(publicId, { resource_type: "auto" });
+
+    if (!resource || !resource.secure_url) {
+      return res.status(404).json({ error: "File not found" });
+    }
+
+    // File naming
+    const format = (resource.format || "").toLowerCase();
+    const sanitize = (s = "") =>
+      String(s).replace(/[^a-z0-9\-_. ]/gi, "").replace(/\s+/g, " ").trim();
+    let baseName =
+      sanitize(name) ||
+      sanitize(resource.original_filename) ||
+      sanitize(resource.filename) ||
+      "material";
 
     const hasExt = /\.[A-Za-z0-9]{2,5}$/.test(baseName);
-    let filename = baseName;
-    if (format && (!hasExt || (hasExt && baseName.split('.').pop().toLowerCase() !== format))) {
-      filename = `${baseName.replace(/\.[A-Za-z0-9]{2,5}$/, '')}.${format}`;
+    if (format && (!hasExt || baseName.split(".").pop().toLowerCase() !== format)) {
+      baseName = `${baseName.replace(/\.[A-Za-z0-9]{2,5}$/, "")}.${format}`;
     }
-    const mimeMap = {
-      pdf: 'application/pdf',
-      doc: 'application/msword',
-      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      xls: 'application/vnd.ms-excel',
-      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      ppt: 'application/vnd.ms-powerpoint',
-      pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      txt: 'text/plain',
-      png: 'image/png',
-      jpg: 'image/jpeg',
-      jpeg: 'image/jpeg',
-      gif: 'image/gif',
-      webp: 'image/webp',
-      mp4: 'video/mp4',
-      webm: 'video/webm',
-      mov: 'video/quicktime'
-    };
-    const contentType = mimeMap[format] || 'application/octet-stream';
-    const disposition = mode === 'attachment' ? 'attachment' : 'inline';
-    res.setHeader('Content-Disposition', `${disposition}; filename="${filename}"`);
-    res.setHeader('Content-Type', contentType);
 
-    const https = require('https');
+    // MIME type map
+    const mimeMap = {
+      pdf: "application/pdf",
+      doc: "application/msword",
+      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      xls: "application/vnd.ms-excel",
+      xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      ppt: "application/vnd.ms-powerpoint",
+      pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      txt: "text/plain",
+      png: "image/png",
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      gif: "image/gif",
+      webp: "image/webp",
+      mp4: "video/mp4",
+      webm: "video/webm",
+      mov: "video/quicktime",
+    };
+
+    const contentType = mimeMap[format] || "application/octet-stream";
+
+    // 🔑 inline = view in browser, attachment = force download
+    const disposition = mode === "attachment" ? "attachment" : "inline";
+
+    res.setHeader("Content-Disposition", `${disposition}; filename="${baseName}"`);
+    res.setHeader("Content-Type", contentType);
+
+    // Stream file from Cloudinary
+    const https = require("https");
     https.get(resource.secure_url, (fileRes) => {
       fileRes.pipe(res);
-    }).on('error', (err) => {
-      res.status(500).json({ error: 'Failed to download file', details: err.message });
+    }).on("error", (err) => {
+      res.status(500).json({ error: "Failed to download file", details: err.message });
     });
   } catch (err) {
-    res.status(500).json({ error: 'Server error', details: err.message });
+    res.status(500).json({ error: "Server error", details: err.message });
   }
 };
+
 // Cloudinary file upload
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({
@@ -86,6 +106,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const { sendStaffCredentialsEmail } = require('../lib/email');
 
 exports.signin = async (req, res) => {
     try {
@@ -142,10 +163,10 @@ exports.signup = async (req, res) => {
     password = password && String(password);
     phone = phone && String(phone).trim();
 
-    // Prepare errors object for field-level errors
+   
     const errors = {};
 
-    // Field presence
+   
     if (!firstName) errors.firstName = 'First name is required.';
     if (!lastName) errors.lastName = 'Last name is required.';
     if (!email) errors.email = 'Email is required.';
@@ -165,7 +186,7 @@ exports.signup = async (req, res) => {
       if (!strongRe.test(password)) errors.password = (errors.password ? errors.password + ' ' : '') + 'Use at least one letter and one number.';
     }
 
-    // Phone basic check (optional but if provided must be digits-ish)
+    
     if (phone) {
       const phoneRe = /^[0-9()+\- ]{7,20}$/;
       if (!phoneRe.test(phone)) errors.phone = 'Phone format looks invalid.';
@@ -182,7 +203,7 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ message: 'Validation failed', errors });
     }
 
-    // Check if user already exists (case-insensitive email)
+   
     const existing = await Student.findOne({ email: new RegExp(`^${email.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}$`, 'i') });
     if (existing) {
       return res.status(409).json({ message: 'Conflict', errors: { email: 'Email already exists.' } });
@@ -211,7 +232,6 @@ exports.signup = async (req, res) => {
     const student = new Student({ firstName, lastName, email, password: hashedPassword, type, phone, uniqueId });
     try {
       await student.save();
-      // Remove sensitive fields from response
       const out = student.toObject();
       delete out.password;
       res.status(201).json({ message: 'Signup successful!', student: out });
@@ -244,12 +264,20 @@ exports.inviteStaff = async (req, res) => {
       return res.status(400).json({ error: 'Email is required.' })
     }
     
-    // Check if email already exists
     const safeEmailPattern = new RegExp(`^${normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
     const emailExists = await Student.findOne({ email: safeEmailPattern });
     if (emailExists) {
-      console.warn('[inviteStaff] Email already exists:', email);
-      return res.status(409).json({ error: 'Email already exists.' });
+      const meta = {
+        matchedId: emailExists._id?.toString?.(),
+        matchedType: emailExists.type,
+        matchedIsActive: emailExists.isActive,
+        storedEmail: emailExists.email,
+        requestedEmail: normalizedEmail,
+      };
+      console.warn(`[inviteStaff][${env}] Duplicate email`, meta); 
+      return res.status(409).json({
+        error: 'Email already exists.',
+      });
     }
     
     
@@ -278,72 +306,35 @@ exports.inviteStaff = async (req, res) => {
     await user.save();
     console.info(`[inviteStaff][${env}] Staff user created`, { userId: user._id.toString(), email: normalizedEmail, uniqueId, type });
 
-    const mailUser = process.env.MAIL_USER;
-    const mailPass = process.env.MAIL_PASS;
-    if (!mailUser || !mailPass) {
-      console.error('[inviteStaff] MAIL_USER or MAIL_PASS not set');
-      return res.status(500).json({ error: 'Email service not configured (MAIL_USER/MAIL_PASS missing).' });
-    }
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: mailUser, pass: mailPass },
-    });
     try {
-      await transporter.verify();
-      console.info(`[inviteStaff][${env}] Email transporter verified`);
-    } catch (verifyErr) {
-      console.error('[inviteStaff] Transporter verify failed:', verifyErr);
-      return res.status(500).json({ error: 'Email service verification failed.', details: verifyErr.message });
+      const fullName = `${firstName || ''} ${lastName || ''}`.trim() || 'Staff';
+      await sendStaffCredentialsEmail(normalizedEmail, fullName, tempPassword);
+      console.info(`[inviteStaff][${env}] Invite email sent`, { to: normalizedEmail, uniqueId });
+      return res.json({ 
+        message: `${type.charAt(0).toUpperCase() + type.slice(1)} account created successfully!`, 
+        userId: user._id,
+        uniqueId: uniqueId,
+        email: normalizedEmail,
+        emailSent: true,
+      });
+    } catch (mailErr) {
+      console.error('[inviteStaff] sendMail failed:', mailErr?.message || mailErr);
+      return res.status(201).json({
+        message: `${type.charAt(0).toUpperCase() + type.slice(1)} account created, but email could not be sent.`,
+        userId: user._id,
+        uniqueId: uniqueId,
+        email: normalizedEmail,
+        emailSent: false,
+        warning: 'Email service failed. Provide credentials to the staff member manually or try again later.',
+        ...(env === 'development' ? { tempPassword } : {}),
+      });
     }
-    const loginUrl = `${process.env.FRONTEND_URL || 'https://learnl.vercel.app/'}/staff-login`;
-    await transporter.sendMail({
-      from: process.env.MAIL_USER,
-      to: normalizedEmail,
-      subject: `Your ${type} account access - LearnLink`,
-      html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #1A2A80; margin: 0;">Learn Link</h1>
-                <p style="color: #666; margin: 5px 0;">Educational Portal</p>
-              </div>
-              
-              <h2 style="color: #333;">Welcome to Learn Link!</h2>
-              <p>Your ${type} account has been created successfully.</p>
-              
-              <div style="background-color: #f8f9fa; padding: 25px; border-radius: 10px; margin: 25px 0; border-left: 4px solid #1A2A80;">
-                <h3 style="margin-top: 0; color: #1A2A80;">Your Login Credentials:</h3>
-                <div style="margin: 15px 0;">
-                  <p style="margin: 8px 0;"><strong>Email:</strong> <span style="color: #1A2A80;">${normalizedEmail}</span></p>
-                  <p style="margin: 8px 0;"><strong>Your ID:</strong> <span style="background-color: #1A2A80; color: white; padding: 6px 12px; border-radius: 6px; font-family: monospace; font-weight: bold;">${uniqueId}</span></p>
-                  <p style="margin: 8px 0;"><strong>Temporary Password:</strong> <span style="font-family: monospace;">${tempPassword}</span></p>
-                </div>
-              </div>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${loginUrl}" style="background-color: #1A2A80; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Login to Learn Link</a>
-              </div> 
-              
-              <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 0; color: #856404;"><strong>Important:</strong> Use your email + ID + temporary password to login. You can change your password anytime using the "Forgot Password" link on the login page.</p>
-              </div>
-              
-              <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-              <p style="color: #666; font-size: 14px; text-align: center;">This is an automated message. Please do not reply to this email.</p>
-            </div>`,
-    });
-
-    console.info(`[inviteStaff][${env}] Invite email sent`, { to: normalizedEmail, uniqueId });
-    res.json({ 
-      message: `${type.charAt(0).toUpperCase() + type.slice(1)} account created successfully!`, 
-      userId: user._id,
-      uniqueId: uniqueId,
-      email: normalizedEmail
-    });
   } catch (err) {
     console.error('[inviteStaff] Staff creation error:', err);
     res.status(500).json({ 
       error: 'Server error', 
       details: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      stack: process.env.PORT=== 'development' ? err.stack : undefined
     });
   }
 };
@@ -368,7 +359,7 @@ exports.requestPasswordReset = async (req, res) => {
       },
     });
 
-    const resetLink = `https://ll-mw69.onrender.com/reset-password/${token}`;
+    const resetLink = `https://ll-2.onrender.com/reset-password/${token}`;
     await transporter.sendMail({
       from: process.env.MAIL_USER,
       to: user.email,
