@@ -359,7 +359,7 @@ exports.requestPasswordReset = async (req, res) => {
       },
     });
 
-    const resetLink = `https://ll-3.onrender.com/reset-password/${token}`;
+    const resetLink = `https://ll-4.onrender.com/reset-password/${token}`;
     await transporter.sendMail({
       from: process.env.MAIL_USER,
       to: user.email,
