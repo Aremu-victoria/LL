@@ -11,7 +11,7 @@ const ForgotPassword = () => {
     setError('');
     setMessage('');
     try {
-      const res = await axios.post('https://ll-2.onrender.com/api/forgot-password', { email });
+      const res = await axios.post('https://ll-4.onrender.com/api/forgot-password', { email });
       setMessage(res.data.message || 'If your email exists, a reset link was sent.');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to send reset email.');
