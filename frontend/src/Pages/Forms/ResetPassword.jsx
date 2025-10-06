@@ -17,7 +17,7 @@ const ResetPassword = () => {
     if (password.length < 6) return setError('Password must be at least 6 characters');
     if (password !== confirm) return setError('Passwords do not match');
     try {
-      const res = await axios.post(`https://ll-4.onrender.com/api/reset-password/${token}`, { password });
+      const res = await axios.post(`https://ll-3.onrender.com/api/reset-password/${token}`, { password });
       setMessage(res.data.message || 'Password updated');
       setTimeout(() => navigate('/staff-login'), 1000);
     } catch (err) {
