@@ -46,7 +46,7 @@ const Signup = () => {
       setSuccessMsg('');
       setLoading(true); // Start loader
       try {
-        const res = await axios.post('https://ll-2.onrender.com/api/signup', values);
+        const res = await axios.post('https://ll-3.onrender.com/api/signup', values);
         setSuccessMsg(res.data.message || 'Signup successful!');
         formik.resetForm();
         setTimeout(() => {

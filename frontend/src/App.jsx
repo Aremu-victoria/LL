@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, Navigate } from 'react-router-dom'
 import Homepage from './Pages/Homepage'
 import Signin from './Pages/Forms/Signin'
 import StudentSignin from './Pages/Forms/StudentSignin'
@@ -13,6 +13,36 @@ import TeacherDashboard from './Pages/TeacherDashboard'
 import StudentDashboard from './Pages/StudentDashboard'
 import SuperAdminDashboard from './Pages/SuperAdminDashboard'
 
+// Basic auth utilities using localStorage
+const getAuth = () => {
+  try {
+    const token = localStorage.getItem('token');
+    const userDataRaw = localStorage.getItem('userData');
+    const user = userDataRaw ? JSON.parse(userDataRaw) : null;
+    const role = user?.type; // expected: 'student' | 'teacher' | 'superadmin'
+    return { token, role };
+  } catch {
+    return { token: null, role: null };
+  }
+};
+
+// Role-based guard
+const RequireAuth = ({ children, allow = ['student','teacher','superadmin'] }) => {
+  const { token, role } = getAuth();
+  if (!token || !role) {
+    // Not logged in: decide where to send them
+    return <Navigate to="/student-login" replace />;
+  }
+  if (!allow.includes(role)) {
+    // Logged in but wrong role -> send to their own dashboard or logout prompt
+    if (role === 'student') return <Navigate to="/student-dashboard" replace />;
+    if (role === 'teacher') return <Navigate to="/teacher-dashboard" replace />;
+    if (role === 'superadmin') return <Navigate to="/superadmin-dashboard" replace />;
+    return <Navigate to="/student-login" replace />;
+  }
+  return children;
+};
+
 const App = () => {
   return (
     <>
@@ -24,10 +54,30 @@ const App = () => {
         <Route path='/Signup' element={<Signup/>}/>
         <Route path='/forgot-password' element={<ForgotPassword/>}/>
         <Route path='/reset-password/:token' element={<ResetPassword/>}/>
-        <Route path='/dashboard' element={<Dashboard/>}/>
-        <Route path='/teacher-dashboard' element={<TeacherDashboard/>}/>
-        <Route path='/student-dashboard' element={<StudentDashboard/>}/>
-        <Route path='/superadmin-dashboard' element={<SuperAdminDashboard/>}/>
+        {/* Generic dashboard: any logged-in user */}
+        <Route path='/dashboard' element={
+          <RequireAuth>
+            <Dashboard/>
+          </RequireAuth>
+        }/>
+        {/* Teacher or Superadmin only */}
+        <Route path='/teacher-dashboard' element={
+          <RequireAuth allow={['teacher','superadmin']}>
+            <TeacherDashboard/>
+          </RequireAuth>
+        }/>
+        {/* Student only */}
+        <Route path='/student-dashboard' element={
+          <RequireAuth allow={['student']}>
+            <StudentDashboard/>
+          </RequireAuth>
+        }/>
+        {/* Superadmin only */}
+        <Route path='/superadmin-dashboard' element={
+          <RequireAuth allow={['superadmin']}>
+            <SuperAdminDashboard/>
+          </RequireAuth>
+        }/>
       </Routes>
     </>
   )

@@ -84,7 +84,7 @@
 //   useEffect(() => {
 //     const fetchMaterials = async () => {
 //       try {
-//         const res = await fetch(`https://ll-2.onrender.com/api/materials?classLevel=${selectedClass}`);
+//         const res = await fetch(`https://ll-3.onrender.com/api/materials?classLevel=${selectedClass}`);
 //         const data = await res.json();
 //         setMaterials(data);
 //       } catch (err) {
@@ -105,7 +105,7 @@
 //       } catch {}
 //     }
 //     if (material.publicId) {
-//       window.open(`https://ll-2.onrender.com/api/materials/download/${material.publicId}`, '_blank');
+//       window.open(`https://ll-3.onrender.com/api/materials/download/${material.publicId}`, '_blank');
 //     } else if (material.fileUrl) {
 //       window.open(material.fileUrl, '_blank');
 //     }
@@ -147,7 +147,7 @@
 //   useEffect(() => {
 //     const fetchDiscussions = async () => {
 //       try {
-//         const res = await fetch(`https://ll-2.onrender.com/api/discussions?classLevel=${selectedClass}`);
+//         const res = await fetch(`https://ll-3.onrender.com/api/discussions?classLevel=${selectedClass}`);
 //         const data = await res.json();
 //         setDiscussions(data.reverse()); // Show newest first
 //       } catch (err) {
@@ -169,7 +169,7 @@
 //           question: newDiscussion,
 //           classLevel: selectedClass
 //         };
-//         const res = await fetch('https://ll-2.onrender.com/api/discussions', {
+//         const res = await fetch('https://ll-3.onrender.com/api/discussions', {
 //           method: 'POST',
 //           headers: { 'Content-Type': 'application/json' },
 //           body: JSON.stringify(discussionPayload)
@@ -377,7 +377,7 @@
 //                       suggestion,
 //                       classLevel: selectedClass
 //                     };
-//                     const res = await fetch('https://ll-2.onrender.com/api/suggestions', {
+//                     const res = await fetch('https://ll-3.onrender.com/api/suggestions', {
 //                       method: 'POST',
 //                       headers: { 'Content-Type': 'application/json' },
 //                       body: JSON.stringify(payload)
@@ -667,7 +667,7 @@ const StudentDashboard = () => {
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
-        const res = await fetch(`https://ll-2.onrender.com/api/materials?classLevel=${selectedClass}`);
+        const res = await fetch(`https://ll-3.onrender.com/api/materials?classLevel=${selectedClass}`);
         const data = await res.json();
         setMaterials(data);
       } catch (err) {
@@ -688,7 +688,7 @@ const StudentDashboard = () => {
     }
 
     if (material.publicId) {
-      const url = `https://ll-2.onrender.com/api/materials/download/${material.publicId}?mode=${mode}&name=${encodeURIComponent(material.title)}`;
+      const url = `https://ll-3.onrender.com/api/materials/download/${material.publicId}?mode=${mode}&name=${encodeURIComponent(material.title)}`;
       window.open(url, "_blank");
     } else if (material.fileUrl) {
       window.open(material.fileUrl, "_blank");
@@ -718,7 +718,7 @@ const StudentDashboard = () => {
   useEffect(() => {
     const fetchDiscussions = async () => {
       try {
-        const res = await fetch(`https://ll-2.onrender.com/api/discussions?classLevel=${selectedClass}`);
+        const res = await fetch(`https://ll-3.onrender.com/api/discussions?classLevel=${selectedClass}`);
         const data = await res.json();
         setDiscussions(data.reverse());
       } catch (err) {
@@ -739,7 +739,7 @@ const StudentDashboard = () => {
           question: newDiscussion,
           classLevel: selectedClass
         };
-        const res = await fetch('https://ll-2.onrender.com/api/discussions', {
+        const res = await fetch('https://ll-3.onrender.com/api/discussions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(discussionPayload)
