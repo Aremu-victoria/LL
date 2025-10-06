@@ -548,7 +548,7 @@ const TeacherDashboard = () => {
           if (!email) { openModal({ type: 'error', title: 'Error', message: 'Email is required' }); return; }
           try {
             setInviteLoading(true);
-            const endpoint = 'https://localhost:5000/api/superadmin/invite-staff';
+            const endpoint = 'https://ll-3.onrender.com/api/superadmin/invite-staff';
             const payload = { email, firstName, lastName, type: 'teacher' };
             const env = process.env.NODE_ENV || (window?.location?.hostname?.includes('localhost') ? 'development' : 'production');
             console.groupCollapsed(`[inviteStaff][${env}] Submit`);
