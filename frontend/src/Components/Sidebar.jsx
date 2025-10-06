@@ -5,6 +5,7 @@ import './Sidebar.css';
 const Sidebar = ({ userType, activeTab, onTabChange, user, courses = [], selectedCourseId, onCourseSelect }) => {
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const toggleSidebar = () => setIsCollapsed((c) => !c);
 
   const handleLogout = () => {
     try {
