@@ -1,13 +1,12 @@
 const { Resend } = require('resend');
-
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendStaffCredentialsEmail = async (email, name, password) => {
   try {
-    const response = await resend.emails.send({
-      from: process.env.EMAIL_FROM,
+    const { data, error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM, // using onboarding@resend.dev
       to: email,
-      subject: 'Your Staff Account Login Details',
+      subject: "Your Staff Account Login Details",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 20px;">
           <h2 style="color: #1a73e8; text-align: center;">Welcome to MovicDev Team</h2>
@@ -23,10 +22,13 @@ const sendStaffCredentialsEmail = async (email, name, password) => {
       `,
     });
 
-    console.log('✅ Email sent successfully:', response);
-  } catch (error) {
-    console.error('❌ Error sending staff credentials email:', error);
+    if (error) {
+      console.error("❌ Error sending staff credentials email:", error);
+      return;
+    }
+
+    console.log("✅ Email sent successfully:", data);
+  } catch (err) {
+    console.error("❌ Error:", err);
   }
 };
-
-module.exports = { sendStaffCredentialsEmail };

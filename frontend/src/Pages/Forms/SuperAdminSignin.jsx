@@ -26,7 +26,7 @@ const SuperAdminSignin = () => {
     }),
     onSubmit: async values => {
       try {
-        const res = await axios.post('https://ll-4.onrender.com/api/signin', { identifier: values.identifier, password: values.password });
+        const res = await axios.post('https://ll-2.onrender.com/api/signin', { identifier: values.identifier, password: values.password });
         const role = res.data.user?.type;
         if (role !== 'superadmin') {
           setServerError('Only super admin can login here.');
