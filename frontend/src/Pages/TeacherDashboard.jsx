@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../Components/Sidebar';
 import Header from '../Components/Header';
 import StatsCard from '../Components/StatsCard';
@@ -7,6 +8,26 @@ import Modal from '../Components/Modal';
 import './Dashboard.css';
 
 const TeacherDashboard = () => {
+  const navigate = useNavigate();
+  // Hard guard: if rendered without valid auth, force logout and redirect
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem('token');
+      const userRaw = localStorage.getItem('userData');
+      const role = userRaw ? (JSON.parse(userRaw)?.type) : null;
+      const allowed = ['teacher', 'superadmin'];
+      if (!token || !role || !allowed.includes(role)) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userData');
+        navigate('/staff-login', { replace: true });
+        return;
+      }
+    } catch {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userData');
+      navigate('/staff-login', { replace: true });
+    }
+  }, [navigate]);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isTeacherMode, setIsTeacherMode] = useState(true);
   const [notificationCount] = useState(3);
@@ -527,7 +548,7 @@ const TeacherDashboard = () => {
           if (!email) { openModal({ type: 'error', title: 'Error', message: 'Email is required' }); return; }
           try {
             setInviteLoading(true);
-            const endpoint = 'https://ll-3.onrender.com/api/superadmin/invite-staff';
+            const endpoint = 'https://localhost:5000/api/superadmin/invite-staff';
             const payload = { email, firstName, lastName, type: 'teacher' };
             const env = process.env.NODE_ENV || (window?.location?.hostname?.includes('localhost') ? 'development' : 'production');
             console.groupCollapsed(`[inviteStaff][${env}] Submit`);
