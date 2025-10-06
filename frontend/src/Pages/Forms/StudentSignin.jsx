@@ -4,7 +4,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import '../../App.css';
-
+import image from '../../assets/hero.png';
 const StudentSignin = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState('');
@@ -28,7 +28,7 @@ const StudentSignin = () => {
     onSubmit: async values => {
       setLoading(true); // start loader
       try {
-        const res = await axios.post('https://ll-mw69.onrender.com/api/signin', { 
+        const res = await axios.post('https://ll-3.onrender.com/api/signin', { 
           identifier: values.identifier, 
           password: values.password 
         });
@@ -132,7 +132,7 @@ const StudentSignin = () => {
             <span style={{fontWeight: 700, fontSize: '2rem', color: 'white', letterSpacing: '1px'}}>LearnLink</span>
           </div>
           <div className="signin-img-circle position-relative d-flex align-items-center justify-content-center">
-            <img src="/src/assets/hero.png" alt="Student" className="signin-img" />
+            <img src={image} alt="Student" className="signin-img" />
           </div>
         </div>
       </div>

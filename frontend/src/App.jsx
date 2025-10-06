@@ -31,14 +31,14 @@ const RequireAuth = ({ children, allow = ['student','teacher','superadmin'] }) =
   const { token, role } = getAuth();
   if (!token || !role) {
     // Not logged in: decide where to send them
-    return <Navigate to="/student-login" replace />;
+    return <Navigate to="/" replace />;
   }
   if (!allow.includes(role)) {
     // Logged in but wrong role -> send to their own dashboard or logout prompt
     if (role === 'student') return <Navigate to="/student-dashboard" replace />;
     if (role === 'teacher') return <Navigate to="/teacher-dashboard" replace />;
     if (role === 'superadmin') return <Navigate to="/superadmin-dashboard" replace />;
-    return <Navigate to="/student-login" replace />;
+    return <Navigate to="/" replace />;
   }
   return children;
 };
