@@ -9,7 +9,7 @@ const sendStaffCredentialsEmail = async (email, name, password) => {
       subject: "Your Staff Account Login Details",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 20px;">
-          <h2 style="color: #1a73e8; text-align: center;">Welcome to MovicDev Team</h2>
+          <h2 style="color: #1a73e8; text-align: center;">LearnLink School Management</h2>
           <p>Dear <b>${name}</b>,</p>
           <p>Your staff account has been created successfully. You can now log in using the details below:</p>
           <ul style="font-size: 16px;">
@@ -17,7 +17,7 @@ const sendStaffCredentialsEmail = async (email, name, password) => {
             <li><b>Password:</b> ${password}</li>
           </ul>
           <p>Please log in and change your password after your first login for security reasons.</p>
-          <p style="color: #666;">Thank you,<br/>MovicDev Team</p>
+          <p style="color: #666;">Thank you,<br/>LearnLink School Management</p>
         </div>
       `,
     });
