@@ -32,3 +32,5 @@ const sendStaffCredentialsEmail = async (email, name, password) => {
     console.error("❌ Error:", err);
   }
 };
+
+module.exports = { sendStaffCredentialsEmail };
