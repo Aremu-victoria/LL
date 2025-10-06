@@ -4,6 +4,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import '../../App.css';
+import image from '../../assets/hero.png';
 
 const StaffSignin = () => {
   const navigate = useNavigate();
@@ -148,7 +149,7 @@ const StaffSignin = () => {
             <span style={{fontWeight: 700, fontSize: '2rem', color: 'white', letterSpacing: '1px'}}>LearnLink</span>
           </div>
           <div className="signin-img-circle position-relative d-flex align-items-center justify-content-center">
-            <img src="/src/assets/hero.png" alt="Staff" className="signin-img" />
+            <img src={image} alt="Staff" className="signin-img" />
           </div>
         </div>
       </div>
