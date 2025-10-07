@@ -1,20 +1,3 @@
-
-
-  // Initialize selected class from the student's saved classLevel (from signup)
-  useEffect(() => {
-    if (user && typeof user === 'object' && user.type === 'student' && user.classLevel) {
-      try {
-        const lvl = String(user.classLevel).toUpperCase();
-        setSelectedClass(lvl);
-      } catch {}
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-
-//               onC
-
-
 import React, { useState, useEffect } from 'react';
 import MaterialCard from '../Components/MaterialCard';
 import Modal from '../Components/Modal';
@@ -105,6 +88,14 @@ const StudentDashboard = () => {
     fetchMaterials();
   }, [selectedClass]);
 
+  useEffect(() => {
+    if (user && typeof user === 'object' && user.type === 'student' && user.classLevel) {
+      try {
+        const lvl = String(user.classLevel).toUpperCase();
+        setSelectedClass(lvl);
+      } catch {}
+    }
+  }, []);
   // Download or view material
   const handleDownloadMaterial = (material, mode = "inline") => {
     if (!downloadedMaterials.find(m => m._id === material._id)) {
