@@ -2,7 +2,7 @@
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-const sendStaffCredentialsEmail = async (email, name, password, resetLink) => {
+const sendStaffCredentialsEmail = async (email, name, password ) => {
   try {
     const msg = {
       to: email,
@@ -18,9 +18,6 @@ const sendStaffCredentialsEmail = async (email, name, password, resetLink) => {
             <li><b>Password:</b> ${password}</li>
           </ul>
           <p style="margin-top:10px;">For security, please reset your password now using the link below:</p>
-          <p>
-            <a href="${resetLink}" style="background:#1a73e8;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;display:inline-block;">Reset your password</a>
-          </p>
           <p style="color:#666;font-size:13px;">This link will expire in 30 minutes. If the button doesn't work, copy and paste this URL into your browser:<br/><span style="word-break:break-all;">${resetLink}</span></p>
           <hr style="border:none;border-top:1px solid #eee;margin:18px 0;"/>
           <p>You can also sign in with the temporary password above and change it from your profile.</p>

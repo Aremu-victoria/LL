@@ -31,7 +31,8 @@ const Sidebar = ({ userType, activeTab, onTabChange, user, courses = [], selecte
     { id: 'materials', label: 'My Materials', icon: '📁' },
     { id: 'discussions', label: 'Discussions', icon: '💬' },
     { id: 'comments', label: 'Comments', icon: '💬' },
-    { id: 'students', label: 'Students', icon: '👥' }
+    { id: 'students', label: 'Students', icon: '👥' },
+    { id: 'profile', label: 'Profile', icon: '👤' },
   ];
 
   const studentMenuItems = [

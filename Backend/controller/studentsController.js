@@ -458,10 +458,15 @@ exports.listStudents = async (req, res) => {
 exports.updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const { firstName, lastName, email, phone } = req.body;
+    const { firstName, lastName, email, phone, password } = req.body;
+    const updateDoc = { firstName, lastName, email, phone };
+    // If password provided, hash and update
+    if (password && String(password).trim().length >= 6) {
+      updateDoc.password = await bcrypt.hash(String(password), 10);
+    }
     const updated = await Student.findByIdAndUpdate(
       id,
-      { firstName, lastName, email, phone },
+      updateDoc,
       { new: true }
     ).select('-password');
     if (!updated) return res.status(404).json({ error: 'Student not found' });

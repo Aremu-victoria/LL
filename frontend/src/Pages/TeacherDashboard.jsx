@@ -47,6 +47,8 @@ const TeacherDashboard = () => {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [selectedStaffForActivity, setSelectedStaffForActivity] = useState(null);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', confirmPassword: '' });
 
   // Modal state
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', actions: [] });
@@ -72,6 +74,7 @@ const TeacherDashboard = () => {
         return {
           name: parsedUser.name || `${parsedUser.firstName || ''} ${parsedUser.lastName || ''}`.trim(),
           id: parsedUser.uniqueId || parsedUser._id,
+          dbId: parsedUser._id,
           email: parsedUser.email,
           role: parsedUser.type === 'teacher' ? 'Teacher' : parsedUser.type === 'superadmin' ? 'Super Admin' : parsedUser.type,
           type: parsedUser.type || 'teacher',
@@ -92,6 +95,109 @@ const TeacherDashboard = () => {
   };
 
   const user = getUserData();
+
+  // Initialize profile form
+  useEffect(() => {
+    setProfileForm(prev => ({
+      ...prev,
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || '',
+      phone: '',
+      password: '',
+      confirmPassword: ''
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleProfileSave = async (e) => {
+    e.preventDefault();
+    if (!user.dbId) {
+      openModal({ type: 'error', title: 'Error', message: 'User id not found.' });
+      return;
+    }
+    if ((profileForm.password || profileForm.confirmPassword) && profileForm.password !== profileForm.confirmPassword) {
+      openModal({ type: 'error', title: 'Password Mismatch', message: 'Passwords do not match.' });
+      return;
+    }
+    const payload = {
+      firstName: profileForm.firstName?.trim(),
+      lastName: profileForm.lastName?.trim(),
+      email: profileForm.email?.trim(),
+      phone: profileForm.phone?.trim() || undefined,
+      ...(profileForm.password ? { password: profileForm.password } : {})
+    };
+    setProfileSaving(true);
+    try {
+      const res = await fetch(`https://ll-3.onrender.com/api/students/${user.dbId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Failed to update profile');
+      const updated = await res.json();
+      // Reflect in localStorage for immediate UI consistency
+      try {
+        const raw = localStorage.getItem('userData');
+        if (raw) {
+          const data = JSON.parse(raw);
+          data.firstName = updated.firstName || data.firstName;
+          data.lastName = updated.lastName || data.lastName;
+          data.email = updated.email || data.email;
+          localStorage.setItem('userData', JSON.stringify(data));
+        }
+      } catch {}
+      openModal({ type: 'success', title: 'Updated', message: 'Profile updated successfully.' });
+      setProfileForm(p => ({ ...p, password: '', confirmPassword: '' }));
+    } catch (err) {
+      openModal({ type: 'error', title: 'Update Failed', message: String(err.message || err) });
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const renderProfile = () => (
+    <div className="page-content">
+      <h2>My Profile</h2>
+      <div className="materials-list" style={{ maxWidth: 640 }}>
+        <form onSubmit={handleProfileSave} className="profile-form" style={{ display: 'grid', gap: 12 }}>
+          <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr' }}>
+            <div>
+              <label className="form-label">First Name</label>
+              <input className="form-control" value={profileForm.firstName} onChange={(e)=>setProfileForm(p=>({...p, firstName: e.target.value}))} required />
+            </div>
+            <div>
+              <label className="form-label">Last Name</label>
+              <input className="form-control" value={profileForm.lastName} onChange={(e)=>setProfileForm(p=>({...p, lastName: e.target.value}))} required />
+            </div>
+          </div>
+          <div>
+            <label className="form-label">Email</label>
+            <input type="email" className="form-control" value={profileForm.email} onChange={(e)=>setProfileForm(p=>({...p, email: e.target.value}))} required />
+          </div>
+          <div>
+            <label className="form-label">Phone</label>
+            <input className="form-control" value={profileForm.phone} onChange={(e)=>setProfileForm(p=>({...p, phone: e.target.value}))} placeholder="Optional" />
+          </div>
+          <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 1fr' }}>
+            <div>
+              <label className="form-label">New Password</label>
+              <input type="password" className="form-control" value={profileForm.password} onChange={(e)=>setProfileForm(p=>({...p, password: e.target.value}))} placeholder="Leave blank to keep current" />
+            </div>
+            <div>
+              <label className="form-label">Confirm Password</label>
+              <input type="password" className="form-control" value={profileForm.confirmPassword} onChange={(e)=>setProfileForm(p=>({...p, confirmPassword: e.target.value}))} placeholder="Re-enter new password" />
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+            <button type="submit" className="btn" disabled={profileSaving} style={{ backgroundColor: profileSaving ? '#6b7280' : '#1A2A80', color: '#fff' }}>
+              {profileSaving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 
 
   const handleTeacherModeToggle = () => {
@@ -1051,6 +1157,8 @@ const TeacherDashboard = () => {
         return renderInviteStaff();
       case 'staff_activity':
         return renderStaffActivity();
+      case 'profile':
+        return renderProfile();
       case 'add_student':
         return renderAddStudent();
       default:
