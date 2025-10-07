@@ -773,12 +773,12 @@ const StudentDashboard = () => {
         <div className="section-header"><h3>Select Class</h3></div>
         <div className="materials-list">
           <select className="form-select" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} style={{ maxWidth: 240 }}>
-            <option value="JSS1">JSS1</option>
-            <option value="JSS2">JSS2</option>
-            <option value="JSS3">JSS3</option>
-            <option value="SS1">SS1</option>
-            <option value="SS2">SS2</option>
-            <option value="SS3">SS3</option>
+            {/* <option value="JSS1">JSS1</option> */}
+            {/* <option value="JSS2">JSS2</option> */}
+            {/* <option value="JSS3">JSS3</option> */}
+            {/* <option value="SS1">SS1</option> */}
+            {/* <option value="SS2">SS2</option> */}
+            {/* <option value="SS3">SS3</option> */}
           </select>
         </div>
       </div>
