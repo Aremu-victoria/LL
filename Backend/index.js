@@ -12,11 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(
-  cors({
-    origin: ['https://learnl.vercel.app'] , 
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials: true, 
-  })
+  cors("https://ll-3.onrender.com")
 );
 
 app.use(bodyParser.json());
