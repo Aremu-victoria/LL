@@ -45,6 +45,7 @@ const TeacherDashboard = () => {
   const [selectedClassLevel, setSelectedClassLevel] = useState('SS1');
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   // Modal state
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', actions: [] });
@@ -113,6 +114,7 @@ const TeacherDashboard = () => {
       openModal({ type: 'warning', title: 'Missing Fields', message: 'Please fill in all required fields.' });
       return;
     }
+    setUploadLoading(true);
     let fileUrl = '';
     let fileType = 'pdf';
     let fileSize = undefined;
@@ -136,6 +138,7 @@ const TeacherDashboard = () => {
         }
       } catch (err) {
         openModal({ type: 'error', title: 'File Upload Failed', message: String(err.message || err) });
+        setUploadLoading(false);
         return;
       }
     }
@@ -160,15 +163,22 @@ const TeacherDashboard = () => {
         console.error('Error parsing user data for createdBy:', error);
       }
     }
-    fetch('https://ll-3.onrender.com/api/materials', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(res => res.json()).then(created => {
+    try {
+      const res = await fetch('https://ll-3.onrender.com/api/materials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const created = await res.json();
+      if (!res.ok) throw new Error(created?.error || 'Failed to upload material');
       setMaterials(prev => [created, ...prev]);
       setUploadForm({ title: '', description: '', subject: 'Mathematics', file: null });
       openModal({ type: 'success', title: 'Upload Complete', message: 'Material uploaded successfully!' });
-    }).catch(() => openModal({ type: 'error', title: 'Upload Failed', message: 'Failed to upload material' }));
+    } catch (err) {
+      openModal({ type: 'error', title: 'Upload Failed', message: String(err.message || err) });
+    } finally {
+      setUploadLoading(false);
+    }
   };
 
   const fetchAll = async () => {
@@ -606,6 +616,23 @@ const TeacherDashboard = () => {
   const renderUploadMaterials = () => (
     <div className="page-content">
       <h2>Upload Materials</h2>
+      {uploadLoading && (
+        <div style={{
+          margin: '8px 0 16px',
+          padding: '8px 12px',
+          background: '#EFF6FF',
+          color: '#1D4ED8',
+          border: '1px solid #BFDBFE',
+          borderRadius: 8,
+          fontSize: 14,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8
+        }}>
+          <span role="img" aria-label="hourglass">⏳</span>
+          Uploading... please wait
+        </div>
+      )}
       <div className="upload-form">
         <form onSubmit={handleUploadSubmit}>
 
@@ -618,6 +645,7 @@ const TeacherDashboard = () => {
               placeholder="Enter material title" 
               value={uploadForm.title}
               onChange={(e) => setUploadForm(prev => ({ ...prev, title: e.target.value }))}
+              disabled={uploadLoading}
               required
             />
           </div>
@@ -628,6 +656,7 @@ const TeacherDashboard = () => {
               rows="4"
               value={uploadForm.description}
               onChange={(e) => setUploadForm(prev => ({ ...prev, description: e.target.value }))}
+              disabled={uploadLoading}
               required
             ></textarea>
           </div>
@@ -636,6 +665,7 @@ const TeacherDashboard = () => {
             <select 
               value={uploadForm.subject}
               onChange={(e) => setUploadForm(prev => ({ ...prev, subject: e.target.value }))}
+              disabled={uploadLoading}
             >
               <option value="Mathematics">Mathematics</option>
               <option value="Science">Science</option>
@@ -667,6 +697,7 @@ const TeacherDashboard = () => {
                   type="button"
                   onClick={() => setSelectedClassLevel(lvl)}
                   aria-pressed={selectedClassLevel === lvl}
+                  disabled={uploadLoading}
                   style={{
                     padding: '8px 14px',
                     borderRadius: 20,
@@ -676,7 +707,7 @@ const TeacherDashboard = () => {
                     color: selectedClassLevel === lvl ? '#ffffff' : '#1A2A80',
                     fontWeight: selectedClassLevel === lvl ? 700 : 500,
                     fontSize: 14,
-                    cursor: 'pointer',
+                    cursor: uploadLoading ? 'not-allowed' : 'pointer',
                     transition: 'all .15s ease-in-out'
                   }}
                 >
@@ -687,12 +718,16 @@ const TeacherDashboard = () => {
           </div>
           <div className="form-group">
             <label>File Upload</label>
-            <FileUpload 
-              onFileSelect={handleFileSelect}
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-            />
+            <div style={{ opacity: uploadLoading ? 0.6 : 1, pointerEvents: uploadLoading ? 'none' : 'auto' }}>
+              <FileUpload 
+                onFileSelect={handleFileSelect}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+              />
+            </div>
           </div>
-          <button type="submit" className="submit-btn">Upload Material</button>
+          <button type="submit" className="submit-btn" style={{backgroundColor: uploadLoading ? '#6b7280' : '#1A2A80', color: 'white', opacity: uploadLoading ? 0.85 : 1, cursor: uploadLoading ? 'not-allowed' : 'pointer'}} disabled={uploadLoading}>
+            {uploadLoading ? 'Uploading…' : 'Upload Material'}
+          </button>
         </form>
       </div>
     </div>
@@ -754,11 +789,6 @@ const TeacherDashboard = () => {
             <p>{material.size || ''}</p>
             {material.subject && <p className="subject-tag">{material.subject}</p>}
             <div className="material-actions">
-              <button onClick={() => {
-                setSelectedMaterial(material);
-                setActiveTab('comments');
-              }}>View Comments</button>
-              <button onClick={() => handleViewMaterial(material)}>View</button>
               <button onClick={() => handleDeleteMaterial(material._id)} className="delete-btn">Delete</button>
               <button onClick={() => {
                 if (material.fileUrl) {

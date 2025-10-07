@@ -72,10 +72,6 @@ const Modal = ({ isOpen, title, message, type = 'info', onClose, actions = [] })
               transition: 'transform .12s ease'
             }} onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'} onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}>{a.label}</button>
           ))}
-          <button onClick={handleRequestClose} style={{
-            background: '#fff', color: '#1f2937', border: '1px solid #e5e7eb',
-            padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 600
-          }}>Close</button>
         </div>
       </div>
     </div>
