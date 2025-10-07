@@ -323,7 +323,14 @@ exports.inviteStaff = async (req, res) => {
     }
 
     
-    const tempPassword = crypto.randomBytes(8).toString('hex');
+    // Generate a shorter, user-friendly temporary password (8 chars)
+    const genTempPassword = (len = 8) => {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'; // avoid confusing chars
+      let out = '';
+      for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+      return out;
+    };
+    const tempPassword = genTempPassword(8);
     const hashed = await bcrypt.hash(tempPassword, 10);
     
     const user = new Student({ 
@@ -336,11 +343,22 @@ exports.inviteStaff = async (req, res) => {
       isActive: true 
     });
     await user.save();
+    // Generate a reset token so staff can immediately reset their password
+    try {
+      const token = crypto.randomBytes(32).toString('hex');
+      user.resetPasswordToken = token;
+      user.resetPasswordExpires = new Date(Date.now() + 1000 * 60 * 30); // 30 minutes
+      await user.save();
+    } catch (tokErr) {
+      console.warn('[inviteStaff] could not set reset token:', tokErr?.message || tokErr);
+    }
     console.info(`[inviteStaff][${env}] Staff user created`, { userId: user._id.toString(), email: normalizedEmail, uniqueId, type });
 
     try {
       const fullName = `${firstName || ''} ${lastName || ''}`.trim() || 'Staff';
-      await sendStaffCredentialsEmail(normalizedEmail, fullName, tempPassword);
+      const resetToken = user.resetPasswordToken;
+      const resetLink = `https://ll-3.onrender.com/reset-password/${resetToken}`;
+      await sendStaffCredentialsEmail(normalizedEmail, fullName, tempPassword, resetLink);
       console.info(`[inviteStaff][${env}] Invite email sent`, { to: normalizedEmail, uniqueId });
       return res.json({ 
         message: `${type.charAt(0).toUpperCase() + type.slice(1)} account created successfully!`, 
@@ -358,7 +376,7 @@ exports.inviteStaff = async (req, res) => {
         email: normalizedEmail,
         emailSent: false,
         warning: 'Email service failed. Provide credentials to the staff member manually or try again later.',
-        ...(env === 'development' ? { tempPassword } : {}),
+        ...(env === 'development' ? { tempPassword, resetLink: user.resetPasswordToken ? `https://ll-3.onrender.com/reset-password/${user.resetPasswordToken}` : undefined } : {}),
       });
     }
   } catch (err) {
