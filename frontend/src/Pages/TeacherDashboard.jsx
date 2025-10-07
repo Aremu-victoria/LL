@@ -215,11 +215,11 @@ const TeacherDashboard = () => {
   useEffect(() => { fetchAll(); }, []);
 
   const handleDeleteMaterial = async (id) => {
-    const ok = await confirmAction({ title: 'Delete Material', message: 'Are you sure you want to delete this material?', confirmLabel: 'Delete', type: 'warning' });
+    const ok = await confirmAction({ title: 'Delete Material', message: 'Are you sure you want to delete this material?', confirmLabel: 'Delete', type: 'error' });
     if (!ok) return;
     await fetch(`https://ll-3.onrender.com/api/materials/${id}`, { method: 'DELETE' });
     setMaterials(prev => prev.filter(m => m._id !== id));
-    openModal({ type: 'success', title: 'Deleted', message: 'Material deleted.' });
+    openModal({ type: 'success', title: 'Deleted', message: 'Material deleted successfully.' });
   };
 
   const handleEditMaterial = (id) => {
@@ -488,11 +488,11 @@ const TeacherDashboard = () => {
                 <p>{c.description}</p>
               </div>
               <button className="material-actions" onClick={async () => {
-                const ok = await confirmAction({ title: 'Delete Course', message: `Delete course ${c.title}?`, confirmLabel: 'Delete', type: 'warning' });
+                const ok = await confirmAction({ title: 'Delete Course', message: `Delete course ${c.title}?`, confirmLabel: 'Delete', type: 'error' });
                 if (!ok) return;
                 await fetch(`https://ll-3.onrender.com/api/courses/${c._id}`, { method: 'DELETE' });
                 setCourses(prev => prev.filter(x => x._id !== c._id));
-                openModal({ type: 'success', title: 'Deleted', message: 'Course deleted.' });
+                openModal({ type: 'success', title: 'Deleted', message: 'Course deleted successfully.' });
               }}>Delete</button>
             </div>
           ))}

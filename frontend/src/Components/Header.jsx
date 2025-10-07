@@ -19,18 +19,6 @@ const Header = ({ userType, userName, notificationCount = 3, onTeacherModeToggle
             )}
           </div>
           
-          {userType === 'teacher' && (
-            <div className="teacher-mode-toggle">
-              <span className="toggle-label">Profile</span>
-              <button 
-                className={`toggle-switch ${isTeacherMode ? 'active' : ''}`}
-                onClick={onProfileClick}
-              >
-                <span className="toggle-slider"></span>
-              </button>
-            </div>
-          )}
-          
           {userType === 'student' && (
             <div className="search-icon">
               <span>🔍</span>
