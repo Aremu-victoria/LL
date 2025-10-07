@@ -1,23 +1,13 @@
-const nodemailer = require("nodemailer");
+// lib/email.js
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const sendStaffCredentialsEmail = async (email, name, password) => {
   try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      host: process.env.EMAIL_HOST,
-      port: parseInt(process.env.EMAIL_PORT),
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      tls: { rejectUnauthorized: false },
-    });
-
-    const mailOptions = {
-      from: process.env.EMAIL_FROM,
+    const msg = {
       to: email,
-      subject: "Your Staff Account Login Details",
+      from: process.env.EMAIL_FROM, // must be verified sender
+      subject: 'Your Staff Account Login Details',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 8px; padding: 20px;">
           <h2 style="color: #1a73e8; text-align: center;">Learn Link School Management System</h2>
@@ -33,16 +23,10 @@ const sendStaffCredentialsEmail = async (email, name, password) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        return console.error("Error sending email:", error);
-      } else {
-        console.log("Email sent: " + info.response);
-      }
-    });
-    // console.log(`Staff credentials email sent to ${email}`);
+    await sgMail.send(msg);
+    console.log(`✅ Email sent successfully to ${email}`);
   } catch (error) {
-    console.error("Error sending staff credentials email:", error);
+    console.error('❌ Error sending email via SendGrid:', error.response?.body || error.message);
   }
 };
 
