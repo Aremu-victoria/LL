@@ -532,10 +532,11 @@ const TeacherDashboard = () => {
                 } catch {}
               }}>Edit</button>
               <button className="delete-btn" onClick={async () => {
-                const ok = await confirmAction({ title: 'Delete Staff', message: 'Delete this staff account?', confirmLabel: 'Delete', type: 'warning' });
+                const ok = await confirmAction({ title: 'Delete Staff', message: 'Delete this staff account?', confirmLabel: 'Delete', type: 'error' });
                 if (!ok) return;
                 await fetch(`https://ll-3.onrender.com/api/staff/${s._id}`, { method: 'DELETE' });
                 fetchAll();
+                openModal({ type: 'success', title: 'Deleted', message: 'Staff deleted successfully.' });
               }}>Delete</button>
             </div>
           </div>
@@ -875,11 +876,11 @@ const TeacherDashboard = () => {
                 fetchAll();
               }}>{s.isActive ? 'Archive' : 'Restore'}</button>
               <button className="delete-btn" onClick={async () => {
-                const ok = await confirmAction({ title: 'Delete Student', message: 'Delete this student?', confirmLabel: 'Delete', type: 'warning' });
+                const ok = await confirmAction({ title: 'Delete Student', message: 'Delete this student?', confirmLabel: 'Delete', type: 'error' });
                 if (!ok) return;
                 await fetch(`https://ll-3.onrender.com/api/students/${s._id}`, { method: 'DELETE' });
                 fetchAll();
-                openModal({ type: 'success', title: 'Deleted', message: 'Student deleted.' });
+                openModal({ type: 'success', title: 'Deleted', message: 'Student deleted successfully.' });
               }}>Delete</button>
             </div>
           </div>
