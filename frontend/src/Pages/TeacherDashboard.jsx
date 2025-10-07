@@ -46,6 +46,7 @@ const TeacherDashboard = () => {
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [selectedStaffForActivity, setSelectedStaffForActivity] = useState(null);
 
   // Modal state
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', actions: [] });
@@ -194,9 +195,14 @@ const TeacherDashboard = () => {
           console.error('Error parsing user data for fetchAll:', error);
         }
       }
-      
+      // If superadmin, fetch ALL materials; otherwise, only those created by the logged-in teacher
+      const isSuperAdmin = (user?.type === 'superadmin');
+      const materialsUrl = isSuperAdmin
+        ? 'https://ll-3.onrender.com/api/materials'
+        : `https://ll-3.onrender.com/api/materials?createdBy=${userId}`;
+
       const [matsRes, studsRes, coursesRes] = await Promise.all([
-        fetch(`https://ll-3.onrender.com/api/materials?createdBy=${userId}`),
+        fetch(materialsUrl),
         fetch('https://ll-3.onrender.com/api/students'),
         fetch('https://ll-3.onrender.com/api/courses'),
       ]);
@@ -816,6 +822,118 @@ const TeacherDashboard = () => {
     </div>
   );
 
+  // Superadmin-only: Staff Activity view
+  const renderStaffActivity = () => {
+    if (user.type !== 'superadmin') return renderDashboard();
+
+    // Helper: get owner id from material (supports string id or populated object)
+    const getOwnerId = (m) => {
+      const cb = m.createdBy;
+      if (!cb) return '';
+      if (typeof cb === 'string') return cb;
+      if (typeof cb === 'object') return cb._id || cb.id || '';
+      return '';
+    };
+    const getOwnerName = (m) => {
+      const id = getOwnerId(m);
+      const found = staff.find(s => s._id === id);
+      if (found) return `${found.firstName || ''} ${found.lastName || ''}`.trim() || found.email;
+      // fallback if backend populated createdBy object
+      if (m.createdBy && typeof m.createdBy === 'object') {
+        return m.createdBy.name || `${m.createdBy.firstName || ''} ${m.createdBy.lastName || ''}`.trim() || m.createdBy.email || 'Unknown';
+      }
+      return 'Unknown';
+    };
+
+    const staffWithCounts = staff
+      .map(s => ({
+        ...s,
+        count: materials.filter(m => getOwnerId(m) === s._id).length
+      }))
+      // put staff with uploads first
+      .sort((a, b) => b.count - a.count || (a.firstName || '').localeCompare(b.firstName || ''));
+
+    // Initialize selection to first in list if not set
+    const effectiveSelectedId = selectedStaffForActivity || (staffWithCounts[0]?. _id || null);
+    const selectedMaterials = materials
+      .filter(m => getOwnerId(m) === effectiveSelectedId)
+      .sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    const selectedStaff = staff.find(s => s._id === effectiveSelectedId) || null;
+
+    return (
+      <div className="page-content" style={{ display: 'flex', gap: 16 }}>
+        {/* Mini sidebar */}
+        <aside style={{ width: 260, borderRight: '1px solid #eee' }}>
+          <div style={{ padding: '12px 10px', fontWeight: 700, color: '#1A2A80' }}>Staff Activity</div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {staffWithCounts.map(s => (
+              <button
+                key={s._id}
+                onClick={() => setSelectedStaffForActivity(s._id)}
+                className="sidebar-course-item"
+                style={{
+                  textAlign: 'left',
+                  padding: '10px 12px',
+                  border: 'none',
+                  borderBottom: '1px solid #f3f4f6',
+                  background: (effectiveSelectedId === s._id) ? '#EEF2FF' : '#fff',
+                  color: '#1f2937',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <span>{(s.firstName || 'Teacher') + ' ' + (s.lastName || '')}</span>
+                <span style={{
+                  background: '#1A2A80', color: '#fff', borderRadius: 12, padding: '2px 8px', fontSize: 12
+                }}>{s.count}</span>
+              </button>
+            ))}
+            {staffWithCounts.length === 0 && (
+              <div style={{ padding: 12, color: '#6b7280' }}>No staff found.</div>
+            )}
+          </div>
+        </aside>
+
+        {/* Main panel */}
+        <section style={{ flex: 1, padding: '0 4px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <h2 style={{ margin: 0 }}>Uploads {selectedStaff ? `by ${selectedStaff.firstName || 'Teacher'} ${selectedStaff.lastName || ''}` : ''}</h2>
+            <div style={{ color: '#6b7280' }}>{selectedMaterials.length} item(s)</div>
+          </div>
+          <div className="materials-list" style={{ marginTop: 12 }}>
+            {selectedMaterials.length === 0 ? (
+              <p style={{ color: '#6b7280' }}>No uploads for this staff yet.</p>
+            ) : (
+              selectedMaterials.map(m => (
+                <div key={m._id} className="material-item" style={{ alignItems: 'flex-start' }}>
+                  <div className="material-icon" style={{ color: getFileColor(m.type) }}>
+                    {getFileIcon(m.type)}
+                  </div>
+                  <div className="material-info" style={{ flex: 1 }}>
+                    <h4 style={{ marginBottom: 4 }}>{m.title}</h4>
+                    <p style={{ margin: 0, color: '#6b7280' }}>
+                      {m.subject ? (<><strong>Subject:</strong> {m.subject} • </>) : null}
+                      {m.classLevel ? (<><strong>Class:</strong> {m.classLevel} • </>) : null}
+                      <strong>By:</strong> {getOwnerName(m)} • {m.createdAt ? new Date(m.createdAt).toLocaleString() : ''}
+                    </p>
+                  </div>
+                  <div className="material-actions" style={{ gap: 8 }}>
+                    <button onClick={() => handleViewMaterial(m)}>View</button>
+                    {m.fileUrl && (
+                      <button onClick={() => navigator.clipboard.writeText(m.fileUrl).then(() => openModal({ type: 'success', title: 'Link Copied', message: 'Material link copied to clipboard!' })).catch(() => openModal({ type: 'error', title: 'Copy Failed', message: 'Failed to copy link.' }))}>Share</button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      </div>
+    );
+  };
+
   const renderComments = () => {
     // Only show comments for the selected material
     return (
@@ -907,6 +1025,8 @@ const TeacherDashboard = () => {
         return renderStaffList();
       case 'invite_staff':
         return renderInviteStaff();
+      case 'staff_activity':
+        return renderStaffActivity();
       case 'add_student':
         return renderAddStudent();
       default:

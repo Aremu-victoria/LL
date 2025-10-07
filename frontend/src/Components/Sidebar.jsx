@@ -46,6 +46,7 @@ const Sidebar = ({ userType, activeTab, onTabChange, user, courses = [], selecte
     { id: 'students', label: 'View Students', icon: '👨‍🎓' },
     { id: 'invite_staff', label: 'Add Staff', icon: '➕' },
     { id: 'staff_list', label: 'All Staff', icon: '👥' },
+    { id: 'staff_activity', label: 'Staff Activity', icon: '📜' },
   ];
 
   const menuItems = userType === 'teacher' ? teacherMenuItems : (userType === 'superadmin' ? superadminMenuItems : studentMenuItems);
