@@ -30,6 +30,7 @@ const Signup = () => {
       phone: '',
       uniqueId: '',
       password: '',
+      classLevel: '',
       type: 'student',
     },
     validationSchema: Yup.object({
@@ -39,6 +40,7 @@ const Signup = () => {
       phone: Yup.string().required('Phone is required'),
       uniqueId: Yup.string().required('Matric is required'),
       password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+      classLevel: Yup.string().oneOf(['JSS1','JSS2','JSS3','SS1','SS2','SS3'], 'Select a valid class').required('Class level is required'),
       type: Yup.string().oneOf(['student']).required(),
     }),
     onSubmit: async values => {
@@ -169,6 +171,29 @@ const Signup = () => {
             />
             {formik.touched.phone && formik.errors.phone && (
               <div className="invalid-feedback d-block">{formik.errors.phone}</div>
+            )}
+          </div>
+
+          <div className="mb-2">
+            <label htmlFor="classLevel" className="form-label">Class Level</label>
+            <select
+              name="classLevel"
+              id="classLevel"
+              className={`form-select ${formik.touched.classLevel && formik.errors.classLevel ? 'is-invalid' : ''}`}
+              value={formik.values.classLevel}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            >
+              <option value="">Select your class</option>
+              <option value="JSS1">JSS1</option>
+              <option value="JSS2">JSS2</option>
+              <option value="JSS3">JSS3</option>
+              <option value="SS1">SS1</option>
+              <option value="SS2">SS2</option>
+              <option value="SS3">SS3</option>
+            </select>
+            {formik.touched.classLevel && formik.errors.classLevel && (
+              <div className="invalid-feedback d-block">{formik.errors.classLevel}</div>
             )}
           </div>
 

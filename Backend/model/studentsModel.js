@@ -19,6 +19,8 @@ const studentSchema = new mongoose.Schema({
     phone: { type: String }, 
     uniqueId: { type: String, unique: true, sparse: true, uppercase: true, trim: true }, // Unique ID for students/teachers
     type: { type: String, enum: ['student', 'teacher', 'superadmin'], required: true },
+    // Class level for students (e.g., JSS1, JSS2, JSS3, SS1, SS2, SS3)
+    classLevel: { type: String, uppercase: true, trim: true },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
     isActive: { type: Boolean, default: true }, // For archiving users

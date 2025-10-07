@@ -173,7 +173,7 @@ const Material = mongoose.model('Material');
 
 exports.signup = async (req, res) => {
   try {
-    let { firstName, lastName, email, password, type, phone } = req.body;
+    let { firstName, lastName, email, password, type, phone, classLevel } = req.body;
     const providedUniqueId = req.body.uniqueId;
 
     // Normalize and trim inputs
@@ -192,6 +192,18 @@ exports.signup = async (req, res) => {
     if (!email) errors.email = 'Email is required.';
     if (!password) errors.password = 'Password is required.';
     if (!type) errors.type = 'Type is required.';
+    // Class level required for students
+    const allowedLevels = ['JSS1','JSS2','JSS3','SS1','SS2','SS3'];
+    if (type === 'student') {
+      if (!classLevel) {
+        errors.classLevel = 'Class level is required.';
+      } else {
+        classLevel = String(classLevel).trim().toUpperCase();
+        if (!allowedLevels.includes(classLevel)) {
+          errors.classLevel = 'Invalid class level.';
+        }
+      }
+    }
 
     // Email format
     if (email) {
@@ -249,7 +261,7 @@ exports.signup = async (req, res) => {
       }
     }
 
-    const student = new Student({ firstName, lastName, email, password: hashedPassword, type, phone, uniqueId });
+    const student = new Student({ firstName, lastName, email, password: hashedPassword, type, phone, uniqueId, classLevel });
     try {
       await student.save();
       const out = student.toObject();
