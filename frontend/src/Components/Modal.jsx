@@ -18,6 +18,16 @@ const Modal = ({ isOpen, title, message, type = 'info', onClose, actions = [] })
     }
   }, [isOpen]);
 
+  // Close on Escape
+  useEffect(() => {
+    if (!mounted) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') handleRequestClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mounted]);
+
   if (!mounted) return null;
 
   const colors = {
@@ -58,6 +68,19 @@ const Modal = ({ isOpen, title, message, type = 'info', onClose, actions = [] })
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 10, height: 10, borderRadius: '50%', background: color }} />
           <h3 style={{ margin: 0, fontSize: 18 }}>{title || (type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Notice')}</h3>
+          <div style={{ flex: 1 }} />
+          <button
+            aria-label="Close"
+            onClick={handleRequestClose}
+            style={{
+              border: 'none', background: 'transparent', cursor: 'pointer',
+              color: '#6b7280', fontSize: 18, lineHeight: 1, padding: 6, borderRadius: 6
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            ×
+          </button>
         </div>
         <div style={{ padding: '16px 20px', color: '#374151' }}>
           {typeof message === 'string' ? <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{message}</p> : message}

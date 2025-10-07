@@ -200,9 +200,7 @@ const StudentDashboard = () => {
         <div className="dashboard-section">
           <div className="section-header"><h3>Recent Materials</h3></div>
           <div className="materials-list">
-            {materials.length === 0 ? (
-              <p>No materials for your class yet.</p>
-            ) : (
+            {materials.length > 0 && (
               materials.slice(0, 3).map((material) => (
                 <div key={material._id} className="material-item">
                   <div className="material-icon" style={{ color: getFileColor(material.type) }}>{getFileIcon(material.type)}</div>
