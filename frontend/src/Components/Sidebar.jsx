@@ -39,7 +39,8 @@ const Sidebar = ({ userType, activeTab, onTabChange, user, courses = [], selecte
     { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
     { id: 'materials', label: 'My Materials', icon: '📁' },
     { id: 'downloads', label: 'Downloads', icon: '⬇️' },
-    { id: 'discussions', label: 'Discussions', icon: '💬' }
+    { id: 'discussions', label: 'Discussions', icon: '💬' },
+    { id: 'profile', label: 'Profile', icon: '👤' },
   ];
 
   const superadminMenuItems = [
