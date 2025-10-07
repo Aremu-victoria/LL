@@ -20,6 +20,11 @@ const materialSchema = new mongoose.Schema({
   // Class level the material is intended for (e.g., JSS1, JSS2, JSS3, SS1, SS2, SS3)
   classLevel: { type: String, uppercase: true, trim: true },
   downloads: { type: Number, default: 0 },
+  downloadsLog: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'Student' },
+    userName: { type: String },
+    at: { type: Date, default: Date.now }
+  }],
   createdAt: { type: Date, default: Date.now },
   reviews: [reviewSchema],
 });

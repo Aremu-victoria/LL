@@ -273,8 +273,8 @@ const TeacherDashboard = () => {
     const proxyUrl = publicId
       ? `https://ll-3.onrender.com/api/materials/download/${encodeURIComponent(publicId)}?mode=inline&name=${encodeURIComponent(friendlyName)}`
       : '';
-    // Prefer direct Cloudinary fileUrl; fall back to proxy only if missing
-    const inlineUrl = material.fileUrl || proxyUrl;
+    // Prefer proxyUrl to ensure download logging; fall back to direct fileUrl
+    const inlineUrl = proxyUrl || material.fileUrl;
     // Do NOT use Google Docs Viewer; only preview supported types inline
 
     openModal({
@@ -438,16 +438,20 @@ const TeacherDashboard = () => {
           </div>
           <div className="materials-list">
             {materials.slice(0, 3).map((material) => (
-              <div key={material.id} className="material-item">
+              <div key={material._id} className="material-item">
                 <div className="material-icon" style={{ color: getFileColor(material.type) }}>
                   {getFileIcon(material.type)}
                 </div>
                 <div className="material-info">
                   <h4>{material.title}</h4>
-                  <p>Uploaded {material.uploadTime} • {material.size}</p>
-                  <span className="download-count">{material.downloads} downloads</span>
+                  <p>Uploaded {material.createdAt ? new Date(material.createdAt).toLocaleString() : ''} • {material.size || ''}</p>
+                  <span className="download-count">{material.downloads || 0} downloads</span>
                 </div>
-                <button className="material-actions">⋮</button>
+                <button className="material-actions" title="Delete" onClick={async () => {
+                  const ok = await confirmAction({ title: 'Delete Material', message: 'Are you sure you want to delete this material?', confirmLabel: 'Delete', type: 'error' });
+                  if (!ok) return;
+                  await handleDeleteMaterial(material._id);
+                }}>⋮</button>
               </div>
             ))}
           </div>
@@ -456,7 +460,27 @@ const TeacherDashboard = () => {
         <div className="dashboard-section">
           <h3>Student Activity</h3>
           <div className="activity-list">
-            <p style={{ color: '#888', fontStyle: 'italic' }}>No student activity yet.</p>
+            {(() => {
+              const items = (materials || [])
+                .flatMap(m => (m.downloadsLog || []).map(log => ({
+                  id: `${m._id}-${log.at}-${log.user || log.userName || 'anon'}`,
+                  title: m.title,
+                  user: log.userName || 'A user',
+                  at: log.at,
+                })))
+                .sort((a,b) => new Date(b.at || 0) - new Date(a.at || 0))
+                .slice(0, 6);
+              if (!items.length) return (<p style={{ color: '#888', fontStyle: 'italic' }}>No student activity yet.</p>);
+              return items.map(it => (
+                <div key={it.id} className="activity-item" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 8, background: '#10b981' }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600 }}>{it.user} downloaded {it.title}</div>
+                    <div style={{ color: '#6b7280', fontSize: 12 }}>{it.at ? new Date(it.at).toLocaleString() : ''}</div>
+                  </div>
+                </div>
+              ));
+            })()}
           </div>
         </div>
       </div>

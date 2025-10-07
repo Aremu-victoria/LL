@@ -1,9 +1,9 @@
 
-// Single file download or view
+// Single file download or view (also increments download count and logs activity)
 exports.downloadMaterialFile = async (req, res) => {
   try {
     const { publicId } = req.params;
-    const { mode = "inline", name } = req.query;
+    const { mode = "inline", name, userId, userName } = req.query;
 
     if (!publicId) {
       return res.status(400).json({ error: "No publicId provided" });
@@ -58,6 +58,26 @@ exports.downloadMaterialFile = async (req, res) => {
 
     res.setHeader("Content-Disposition", `${disposition}; filename="${baseName}"`);
     res.setHeader("Content-Type", contentType);
+
+    // Try to increment downloads and log activity
+    try {
+      const Material = require('mongoose').model('Material');
+      const material = await Material.findOne({ publicId });
+      if (material) {
+        material.downloads = (material.downloads || 0) + 1;
+        const logEntry = {
+          at: new Date(),
+        };
+        if (userId) logEntry.user = userId;
+        if (userName) logEntry.userName = userName;
+        material.downloadsLog = Array.isArray(material.downloadsLog) ? material.downloadsLog : [];
+        material.downloadsLog.push(logEntry);
+        await material.save();
+      }
+    } catch (logErr) {
+      // Log but don't fail the download
+      console.warn('[downloadMaterialFile] log failed', logErr?.message || logErr);
+    }
 
     // Stream file from Cloudinary
     const https = require("https");
