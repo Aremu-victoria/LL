@@ -27,8 +27,8 @@ const Sidebar = ({ userType, activeTab, onTabChange, user, courses = [], selecte
 
   const teacherMenuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '🏠' },
+    { id: 'upload', label: 'Upload', icon: '☁️' },
     { id: 'materials', label: 'My Materials', icon: '📁' },
-    { id: 'downloads', label: 'Downloads', icon: '⬇️' },
     { id: 'discussions', label: 'Discussions', icon: '💬' },
     { id: 'comments', label: 'Comments', icon: '💬' },
     { id: 'students', label: 'Students', icon: '👥' }
@@ -46,7 +46,6 @@ const Sidebar = ({ userType, activeTab, onTabChange, user, courses = [], selecte
     { id: 'students', label: 'View Students', icon: '👨‍🎓' },
     { id: 'invite_staff', label: 'Add Staff', icon: '➕' },
     { id: 'staff_list', label: 'All Staff', icon: '👥' },
-    { id: 'add_student', label: 'Add Student', icon: '➕' },
   ];
 
   const menuItems = userType === 'teacher' ? teacherMenuItems : (userType === 'superadmin' ? superadminMenuItems : studentMenuItems);
