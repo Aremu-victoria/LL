@@ -49,6 +49,9 @@ const TeacherDashboard = () => {
   const [selectedStaffForActivity, setSelectedStaffForActivity] = useState(null);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', confirmPassword: '' });
+  // Discussions state
+  const [discussions, setDiscussions] = useState([]);
+  const [newDiscussion, setNewDiscussion] = useState('');
 
   // Modal state
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', actions: [] });
@@ -199,6 +202,54 @@ const TeacherDashboard = () => {
     </div>
   );
 
+  const renderDiscussions = () => (
+    <div className="page-content">
+      <h2>Discussions</h2>
+      <div className="discussions-page">
+        <form className="discussion-form" onSubmit={handlePostDiscussion}>
+          <div style={{ marginBottom: 8 }}>
+            <label className="form-label">Class</label>
+            <select className="form-control" value={selectedClassLevel} onChange={(e)=>setSelectedClassLevel(e.target.value)}>
+              {['JS1','JS2','JS3','SS1','SS2','SS3'].map(lvl => (
+                <option value={lvl} key={lvl}>{lvl}</option>
+              ))}
+            </select>
+          </div>
+          <textarea
+            placeholder={`Post to ${selectedClassLevel}...`}
+            rows="4"
+            value={newDiscussion}
+            onChange={(e) => setNewDiscussion(e.target.value)}
+          />
+          <button className="submit-btn" type="submit">Post Discussion</button>
+        </form>
+        <div className="discussions-list" style={{ marginTop: 12 }}>
+          {discussions.length === 0 ? (
+            <p>No discussions yet.</p>
+          ) : (
+            discussions.map(d => {
+              const displayName = d?.student && typeof d.student === 'object'
+                ? `${d.student.firstName || ''} ${d.student.lastName || ''}`.trim() || d.student.email || 'User'
+                : (d.name || 'User');
+              return (
+                <div key={d._id || d.id} className="discussion-post">
+                  <img src={d.avatar || 'https://via.placeholder.com/32x32/6366f1/ffffff?text=U'} alt={displayName} className="discussion-avatar" />
+                  <div className="discussion-content">
+                    <div className="discussion-header">
+                      <h5>{displayName}</h5>
+                      {d.classLevel && <span className="discussion-topic">{d.classLevel}</span>}
+                    </div>
+                    <p className="discussion-text">{d.question || d.comment}</p>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
 
   const handleTeacherModeToggle = () => {
     setIsTeacherMode(!isTeacherMode);
@@ -325,6 +376,43 @@ const TeacherDashboard = () => {
   };
 
   useEffect(() => { fetchAll(); }, []);
+
+  // Fetch discussions for the selected class level
+  useEffect(() => {
+    const fetchDiscussions = async () => {
+      try {
+        const res = await fetch(`https://ll-3.onrender.com/api/discussions?classLevel=${encodeURIComponent(selectedClassLevel)}`);
+        const data = await res.json();
+        setDiscussions(Array.isArray(data) ? [...data].reverse() : []);
+      } catch (e) {
+        setDiscussions([]);
+      }
+    };
+    fetchDiscussions();
+  }, [selectedClassLevel]);
+
+  const handlePostDiscussion = async (e) => {
+    e.preventDefault();
+    if (!newDiscussion.trim()) return;
+    try {
+      const payload = {
+        classLevel: selectedClassLevel,
+        student: user.dbId,
+        question: newDiscussion.trim(),
+      };
+      const res = await fetch('https://ll-3.onrender.com/api/discussions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Failed to post');
+      const created = await res.json();
+      setDiscussions(prev => [created, ...prev]);
+      setNewDiscussion('');
+    } catch (err) {
+      openModal({ type: 'error', title: 'Failed', message: 'Failed to post discussion.' });
+    }
+  };
 
   const handleDeleteMaterial = async (id) => {
     const ok = await confirmAction({ title: 'Delete Material', message: 'Are you sure you want to delete this material?', confirmLabel: 'Delete', type: 'error' });
@@ -587,6 +675,33 @@ const TeacherDashboard = () => {
                 </div>
               ));
             })()}
+          </div>
+        </div>
+
+        <div className="dashboard-section">
+          <h3>Recent Discussions</h3>
+          <div className="discussions-list" style={{ maxHeight: '260px', overflowY: 'auto', borderTop: '1px solid #f3f4f6' }}>
+            {discussions.length === 0 ? (
+              <p style={{ color: '#888', fontStyle: 'italic' }}>No discussions yet.</p>
+            ) : (
+              discussions.map(d => {
+                const displayName = d?.student && typeof d.student === 'object'
+                  ? `${d.student.firstName || ''} ${d.student.lastName || ''}`.trim() || d.student.email || 'User'
+                  : (d.name || 'User');
+                return (
+                  <div key={d._id || d.id} className="discussion-item" style={{ display: 'flex', gap: 12, padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
+                    <img src={d.avatar || 'https://via.placeholder.com/32x32/6366f1/ffffff?text=U'} alt={displayName} className="discussion-avatar" />
+                    <div className="discussion-content" style={{ flex: 1 }}>
+                      <div className="discussion-header" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <h5 style={{ margin: 0 }}>{displayName}</h5>
+                        {d.classLevel && <span className="discussion-topic">{d.classLevel}</span>}
+                      </div>
+                      <p className="discussion-text" style={{ margin: '4px 0 0' }}>{d.question || d.comment}</p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
@@ -1147,6 +1262,8 @@ const TeacherDashboard = () => {
         return renderMyMaterials();
       case 'saved':
         return renderSavedItems();
+      case 'discussions':
+        return renderDiscussions();
       case 'comments':
         return renderComments();
       case 'students':

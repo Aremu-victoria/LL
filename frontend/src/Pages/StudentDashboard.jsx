@@ -246,7 +246,7 @@ const StudentDashboard = () => {
       try {
         const res = await fetch(`https://ll-3.onrender.com/api/discussions?classLevel=${selectedClass}`);
         const data = await res.json();
-        setDiscussions(data.reverse());
+        setDiscussions(Array.isArray(data) ? [...data].reverse() : []);
       } catch (err) {
         setDiscussions([]);
       }
@@ -259,11 +259,9 @@ const StudentDashboard = () => {
     if (newDiscussion.trim()) {
       try {
         const discussionPayload = {
-          name: user.name,
-          avatar: 'https://via.placeholder.com/32x32/ec4899/ffffff?text=SJ',
-          topic: 'General Discussion',
+          classLevel: selectedClass,
+          student: user.dbId,
           question: newDiscussion,
-          classLevel: selectedClass
         };
         const res = await fetch('https://ll-3.onrender.com/api/discussions', {
           method: 'POST',
@@ -327,22 +325,29 @@ const StudentDashboard = () => {
         {/* Discussions Section */}
         <div className="dashboard-section">
           <h3>Recent Discussions</h3>
-          <div className="discussions-list">
+          <div className="discussions-list" style={{ maxHeight: '260px', overflowY: 'auto' }}>
             {discussions.length === 0 ? (
               <p>No discussions yet.</p>
             ) : (
-              discussions.map((discussion) => (
-                <div key={discussion.id} className="discussion-item">
-                  <img src={discussion.avatar} alt={discussion.name} className="discussion-avatar" />
-                  <div className="discussion-content">
-                    <div className="discussion-header">
-                      <h5>{discussion.name}</h5>
-                      <span className="discussion-topic">{discussion.topic}</span>
+              discussions.map((discussion) => {
+                const displayName = discussion?.student && typeof discussion.student === 'object'
+                  ? `${discussion.student.firstName || ''} ${discussion.student.lastName || ''}`.trim() || (discussion.student.email || 'User')
+                  : (discussion.name || 'User');
+                return (
+                  <div key={discussion._id || discussion.id} className="discussion-item">
+                    <img src={discussion.avatar || 'https://via.placeholder.com/32x32/6366f1/ffffff?text=U'} alt={displayName} className="discussion-avatar" />
+                    <div className="discussion-content">
+                      <div className="discussion-header">
+                        <h5>{displayName}</h5>
+                        {discussion.classLevel && (
+                          <span className="discussion-topic">{discussion.classLevel}</span>
+                        )}
+                      </div>
+                      <p className="discussion-text">{discussion.question || discussion.comment}</p>
                     </div>
-                    <p className="discussion-text">{discussion.question || discussion.comment}</p>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -405,22 +410,39 @@ const StudentDashboard = () => {
     <div className="page-content">
       <h2>Discussions</h2>
       <div className="discussions-page">
-        <div className="discussion-form">
-          <textarea placeholder="Start a new discussion..." rows="4"></textarea>
-          <button className="submit-btn">Post Discussion</button>
-        </div>
-        <div className="discussions-list">
-          {discussions.length === 0 ? <p>No discussions yet.</p> : discussions.map((discussion) => (
-            <div key={discussion.id} className="discussion-post">
-              <img src={discussion.avatar} alt={discussion.name} className="discussion-avatar" />
-              <div className="discussion-content">
-                <div className="discussion-header">
-                  <h5>{discussion.name}</h5>
+        <form className="discussion-form" onSubmit={handlePostDiscussion}>
+          <textarea
+            placeholder={`Start a new discussion for ${selectedClass}...`}
+            rows="4"
+            value={newDiscussion}
+            onChange={(e) => setNewDiscussion(e.target.value)}
+          />
+          <button className="submit-btn" type="submit">Post Discussion</button>
+        </form>
+        <div className="discussions-list" style={{ marginTop: 12 }}>
+          {discussions.length === 0 ? (
+            <p>No discussions yet.</p>
+          ) : (
+            discussions.map((discussion) => {
+              const displayName = discussion?.student && typeof discussion.student === 'object'
+                ? `${discussion.student.firstName || ''} ${discussion.student.lastName || ''}`.trim() || (discussion.student.email || 'User')
+                : (discussion.name || 'User');
+              return (
+                <div key={discussion._id || discussion.id} className="discussion-post">
+                  <img src={discussion.avatar || 'https://via.placeholder.com/32x32/6366f1/ffffff?text=U'} alt={displayName} className="discussion-avatar" />
+                  <div className="discussion-content">
+                    <div className="discussion-header">
+                      <h5>{displayName}</h5>
+                      {discussion.classLevel && (
+                        <span className="discussion-topic">{discussion.classLevel}</span>
+                      )}
+                    </div>
+                    <p className="discussion-text">{discussion.question || discussion.comment}</p>
+                  </div>
                 </div>
-                <p className="discussion-text">{discussion.question || discussion.comment}</p>
-              </div>
-            </div>
-          ))}
+              );
+            })
+          )}
         </div>
       </div>
     </div>
