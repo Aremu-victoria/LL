@@ -52,10 +52,7 @@ const TeacherDashboard = () => {
   // Discussions state
   const [discussions, setDiscussions] = useState([]);
   const [newDiscussion, setNewDiscussion] = useState('');
-  // AI Summary (Upload page) state
-  const [aiChat, setAiChat] = useState([]); // [{role:'user'|'assistant', content:string}]
-  const [aiChatInput, setAiChatInput] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
+  
 
   // Modal state
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', actions: [] });
@@ -264,42 +261,6 @@ const TeacherDashboard = () => {
     setUploadForm(prev => ({ ...prev, file }));
   };
 
-  const handleAskAI = async (e) => {
-    e.preventDefault();
-    const prompt = (aiChatInput || '').trim();
-    if (!prompt) return;
-    // push user message
-    setAiChat(prev => [...prev, { role: 'user', content: prompt }]);
-    setAiChatInput('');
-    setAiLoading(true);
-    try {
-      const res = await fetch('https://ll-3.onrender.com/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          context: {
-            page: 'upload',
-            title: uploadForm.title,
-            description: uploadForm.description,
-            subject: uploadForm.subject,
-            classLevel: selectedClassLevel,
-          }
-        })
-      });
-      let reply = '';
-      if (res.ok) {
-        const data = await res.json();
-        reply = data.reply || data.answer || (typeof data === 'string' ? data : '');
-      }
-      if (!reply) reply = 'AI service is unavailable right now. Please try again later.';
-      setAiChat(prev => [...prev, { role: 'assistant', content: reply }]);
-    } catch (err) {
-      setAiChat(prev => [...prev, { role: 'assistant', content: 'AI service is unavailable right now. Please try again later.' }]);
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   const handleCourseSelect = (course) => {
     setSelectedCourse(course);
@@ -634,7 +595,6 @@ const TeacherDashboard = () => {
         <StatsCard
           title="Total Materials"
           value={materials.length}
-          change="+12% from last month"
           changeType="increase"
           icon="📚"
           iconColor="#6366f1"
@@ -642,7 +602,6 @@ const TeacherDashboard = () => {
         <StatsCard
           title="Active Students"
           value={students && students.length ? students.length : 0}
-          change=""
           changeType="increase"
           icon="👥"
           iconColor="#3b82f6"
@@ -650,7 +609,6 @@ const TeacherDashboard = () => {
         <StatsCard
           title="Downloads"
           value={materials.reduce((sum, material) => sum + material.downloads || 0, 0)}
-          change="-2% from yesterday"
           changeType="decrease"
           icon="⬇️"
           iconColor="#10b981"
@@ -658,7 +616,6 @@ const TeacherDashboard = () => {
         <StatsCard
           title="Comments"
           value={materials && materials.length ? materials.reduce((sum, m) => sum + (m.reviews ? m.reviews.length : 0), 0) : 0}
-          change=""
           changeType="increase"
           icon="💬"
           iconColor="#8b5cf6"
@@ -1022,60 +979,7 @@ const TeacherDashboard = () => {
               />
             </div>
           </div>
-          {/* AI Summary Chat Section */}
-          <div className="form-group" style={{ borderTop: '1px solid #f3f4f6', marginTop: 12, paddingTop: 12 }}>
-            <h3 style={{ margin: 0, marginBottom: 8 }}>AI Summary</h3>
-            <div style={{ color: '#6b7280', fontSize: 13, marginBottom: 8 }}>
-              Ask AI anything about this material (e.g., create a summary, outline key points, suggest quiz questions). This works like a chat.
-            </div>
-            {/* Transcript */}
-            <div style={{
-              maxHeight: 220,
-              overflowY: 'auto',
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              padding: 8,
-              background: '#f9fafb',
-              marginBottom: 8
-            }}>
-              {aiChat.length === 0 ? (
-                <div style={{ color: '#6b7280', fontStyle: 'italic' }}>No conversation yet.</div>
-              ) : (
-                aiChat.map((m, idx) => (
-                  <div key={idx} style={{
-                    display: 'flex',
-                    justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',
-                    marginBottom: 6
-                  }}>
-                    <div style={{
-                      maxWidth: '85%',
-                      padding: '8px 10px',
-                      borderRadius: 10,
-                      background: m.role === 'user' ? '#1A2A80' : '#fff',
-                      color: m.role === 'user' ? '#fff' : '#111827',
-                      border: m.role === 'user' ? 'none' : '1px solid #e5e7eb'
-                    }}>
-                      {m.content}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-            {/* Input */}
-            <form onSubmit={handleAskAI} style={{ display: 'flex', gap: 8 }}>
-              <input
-                type="text"
-                placeholder="Ask AI to summarize, extract key points, or generate questions..."
-                value={aiChatInput}
-                onChange={(e) => setAiChatInput(e.target.value)}
-                disabled={aiLoading}
-                style={{ flex: 1 }}
-              />
-              <button type="submit" className="btn" disabled={aiLoading} style={{ background: aiLoading ? '#6b7280' : '#1A2A80', color: '#fff' }}>
-                {aiLoading ? 'Asking…' : 'Ask AI'}
-              </button>
-            </form>
-          </div>
+          {/* AI Summary chat removed from teacher upload page as requested */}
           <button type="submit" className="submit-btn" style={{backgroundColor: uploadLoading ? '#6b7280' : '#1A2A80', color: 'white', opacity: uploadLoading ? 0.85 : 1, cursor: uploadLoading ? 'not-allowed' : 'pointer'}} disabled={uploadLoading}>
             {uploadLoading ? 'Uploading…' : 'Upload Material'}
           </button>

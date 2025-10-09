@@ -46,6 +46,11 @@ const StudentDashboard = () => {
   const [selectedClass, setSelectedClass] = useState('SS1');
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', confirmPassword: '' });
+  // AI Study Assistant state
+  const [aiChat, setAiChat] = useState([]); // [{role:'user'|'assistant', content:string}]
+  const [aiChatInput, setAiChatInput] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [selectedAiMaterialId, setSelectedAiMaterialId] = useState('');
 
   // Modal state
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', actions: [] });
@@ -150,6 +155,44 @@ const StudentDashboard = () => {
         .catch(() => openModal({ type: 'error', title: 'Copy Failed', message: 'Failed to copy link.' }));
     } else {
       openModal({ type: 'info', title: 'No Link', message: 'No file link available for this material.' });
+    }
+  };
+
+  const handleAskAI = async (e) => {
+    e.preventDefault();
+    const prompt = (aiChatInput || '').trim();
+    if (!prompt) return;
+    const material = materials.find(m => m._id === selectedAiMaterialId) || null;
+    // push user message
+    setAiChat(prev => [...prev, { role: 'user', content: prompt }]);
+    setAiChatInput('');
+    setAiLoading(true);
+    try {
+      const res = await fetch('https://ll-3.onrender.com/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          context: {
+            page: 'student',
+            classLevel: selectedClass,
+            title: material?.title,
+            subject: material?.subject,
+            materialId: material?._id,
+          }
+        })
+      });
+      let reply = '';
+      if (res.ok) {
+        const data = await res.json();
+        reply = data.reply || data.answer || (typeof data === 'string' ? data : '');
+      }
+      if (!reply) reply = 'AI service is unavailable right now. Please try again later.';
+      setAiChat(prev => [...prev, { role: 'assistant', content: reply }]);
+    } catch (err) {
+      setAiChat(prev => [...prev, { role: 'assistant', content: 'AI service is unavailable right now. Please try again later.' }]);
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -358,6 +401,69 @@ const StudentDashboard = () => {
   const renderMyMaterials = () => (
     <div className="page-content">
       <h2>My Materials</h2>
+      {/* AI Study Assistant */}
+      <div className="dashboard-section" style={{ marginTop: 8, marginBottom: 16 }}>
+        <h3>AI Study Assistant</h3>
+        <div style={{ display: 'grid', gap: 8 }}>
+          <div>
+            <label className="form-label">Choose a material to discuss</label>
+            <select
+              className="form-control"
+              value={selectedAiMaterialId}
+              onChange={(e) => setSelectedAiMaterialId(e.target.value)}
+            >
+              <option value="">-- Select Material --</option>
+              {materials.map(m => (
+                <option key={m._id} value={m._id}>{m.title} {m.subject ? `• ${m.subject}` : ''}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{
+            maxHeight: 220,
+            overflowY: 'auto',
+            border: '1px solid #e5e7eb',
+            borderRadius: 8,
+            padding: 8,
+            background: '#f9fafb'
+          }}>
+            {aiChat.length === 0 ? (
+              <div style={{ color: '#6b7280', fontStyle: 'italic' }}>Ask AI to summarize, outline key points, or create quiz questions about a selected material.</div>
+            ) : (
+              aiChat.map((m, idx) => (
+                <div key={idx} style={{
+                  display: 'flex',
+                  justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',
+                  marginBottom: 6
+                }}>
+                  <div style={{
+                    maxWidth: '85%',
+                    padding: '8px 10px',
+                    borderRadius: 10,
+                    background: m.role === 'user' ? '#1A2A80' : '#fff',
+                    color: m.role === 'user' ? '#fff' : '#111827',
+                    border: m.role === 'user' ? 'none' : '1px solid #e5e7eb'
+                  }}>
+                    {m.content}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <form onSubmit={handleAskAI} style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="text"
+              placeholder="Type a question or ask for a summary..."
+              value={aiChatInput}
+              onChange={(e) => setAiChatInput(e.target.value)}
+              disabled={aiLoading || !selectedAiMaterialId}
+              style={{ flex: 1 }}
+            />
+            <button type="submit" className="btn" disabled={aiLoading || !selectedAiMaterialId} style={{ background: aiLoading ? '#6b7280' : '#1A2A80', color: '#fff' }}>
+              {aiLoading ? 'Asking…' : 'Ask AI'}
+            </button>
+          </form>
+        </div>
+      </div>
       <div className="materials-grid">
         {materials.length === 0 ? (
           <p>No materials for your class yet.</p>
