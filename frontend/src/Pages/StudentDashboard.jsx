@@ -367,17 +367,13 @@ const StudentDashboard = () => {
           <p>No materials for your class yet.</p>
         ) : (
           materials.map((material) => (
-            <div key={material._id} className="material-item">
-              <div className="material-icon" style={{ color: getFileColor(material.type) }}>{getFileIcon(material.type)}</div>
-              <div className="material-info">
-                <h4>{material.title}</h4>
-                <p>{material.subject} • {material.size}</p>
-              </div>
-              <div className="material-actions">
-                <button className="action-btn" title="View" onClick={() => handleDownloadMaterial(material, "inline")}>👁️</button>
-                <button className="action-btn" title="Download" onClick={() => handleDownloadMaterial(material, "attachment")}>⬇️</button>
-                <button className="action-btn" title="Share" onClick={() => handleShareMaterial(material)}>🔗</button>
-              </div>
+            <div key={material._id}>
+              <MaterialCard
+                material={material}
+                user={user}
+                onDownload={(m) => handleDownloadMaterial(m, "inline")}
+                onShare={handleShareMaterial}
+              />
             </div>
           ))
         )}
