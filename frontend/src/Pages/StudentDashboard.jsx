@@ -28,8 +28,6 @@ import StatsCard from '../Components/StatsCard';
 import './Dashboard.css';
 
 const StudentDashboard = () => {
-  // Prefer env-configured API base, otherwise current origin
-  const API_BASE = (process.env.REACT_APP_API_BASE || window.location.origin).replace(/\/$/, '');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [notificationCount] = useState(1);
   const [materials, setMaterials] = useState([]);
@@ -48,11 +46,7 @@ const StudentDashboard = () => {
   const [selectedClass, setSelectedClass] = useState('SS1');
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', confirmPassword: '' });
-  // AI Study Assistant state
-  const [aiChat, setAiChat] = useState([]); // [{role:'user'|'assistant', content:string}]
-  const [aiChatInput, setAiChatInput] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
-  const [selectedAiMaterialId, setSelectedAiMaterialId] = useState('');
+  
 
   // Modal state
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'info', actions: [] });
@@ -160,53 +154,7 @@ const StudentDashboard = () => {
     }
   };
 
-  const handleAskAI = async (e) => {
-    e.preventDefault();
-    const prompt = (aiChatInput || '').trim();
-    if (!prompt) return;
-    const material = materials.find(m => m._id === selectedAiMaterialId) || null;
-    // push user message
-    setAiChat(prev => [...prev, { role: 'user', content: prompt }]);
-    setAiChatInput('');
-    setAiLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/ai/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          context: {
-            page: 'student',
-            classLevel: selectedClass,
-            title: material?.title,
-            subject: material?.subject,
-            materialId: material?._id,
-          }
-        })
-      });
-      // Read raw text to surface exact backend output
-      const raw = await res.text();
-      let parsed = null;
-      try { parsed = raw ? JSON.parse(raw) : null; } catch {}
-      if (!res.ok) {
-        const msg = `API Error (status ${res.status}):\n${raw || '(no body)'}`;
-        setAiChat(prev => [...prev, { role: 'assistant', content: msg }]);
-        return;
-      }
-      // Build a helpful reply while also showing raw response (for debugging)
-      let reply = '';
-      if (parsed && typeof parsed === 'object') {
-        reply = parsed.reply || parsed.answer || '';
-      }
-      if (!reply) reply = raw || 'Empty response from AI API.';
-      setAiChat(prev => [...prev, { role: 'assistant', content: reply }]);
-    } catch (err) {
-      const msg = `Request Failed: ${err?.message || String(err)}\nIf available, check network tab for more details.`;
-      setAiChat(prev => [...prev, { role: 'assistant', content: msg }]);
-    } finally {
-      setAiLoading(false);
-    }
-  };
+  
 
   const handleProfileSave = async (e) => {
     e.preventDefault();
@@ -413,69 +361,7 @@ const StudentDashboard = () => {
   const renderMyMaterials = () => (
     <div className="page-content">
       <h2>My Materials</h2>
-      {/* AI Study Assistant */}
-      <div className="dashboard-section" style={{ marginTop: 8, marginBottom: 16 }}>
-        <h3>AI Study Assistant</h3>
-        <div style={{ display: 'grid', gap: 8 }}>
-          <div>
-            <label className="form-label">Choose a material to discuss</label>
-            <select
-              className="form-control"
-              value={selectedAiMaterialId}
-              onChange={(e) => setSelectedAiMaterialId(e.target.value)}
-            >
-              <option value="">-- Select Material --</option>
-              {materials.map(m => (
-                <option key={m._id} value={m._id}>{m.title} {m.subject ? `• ${m.subject}` : ''}</option>
-              ))}
-            </select>
-          </div>
-          <div style={{
-            maxHeight: 220,
-            overflowY: 'auto',
-            border: '1px solid #e5e7eb',
-            borderRadius: 8,
-            padding: 8,
-            background: '#f9fafb'
-          }}>
-            {aiChat.length === 0 ? (
-              <div style={{ color: '#6b7280', fontStyle: 'italic' }}>Ask AI to summarize, outline key points, or create quiz questions about a selected material.</div>
-            ) : (
-              aiChat.map((m, idx) => (
-                <div key={idx} style={{
-                  display: 'flex',
-                  justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',
-                  marginBottom: 6
-                }}>
-                  <div style={{
-                    maxWidth: '85%',
-                    padding: '8px 10px',
-                    borderRadius: 10,
-                    background: m.role === 'user' ? '#1A2A80' : '#fff',
-                    color: m.role === 'user' ? '#fff' : '#111827',
-                    border: m.role === 'user' ? 'none' : '1px solid #e5e7eb'
-                  }}>
-                    {m.content}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          <form onSubmit={handleAskAI} style={{ display: 'flex', gap: 8 }}>
-            <input
-              type="text"
-              placeholder="Type a question or ask for a summary..."
-              value={aiChatInput}
-              onChange={(e) => setAiChatInput(e.target.value)}
-              disabled={aiLoading || !selectedAiMaterialId}
-              style={{ flex: 1 }}
-            />
-            <button type="submit" className="btn" disabled={aiLoading || !selectedAiMaterialId} style={{ background: aiLoading ? '#6b7280' : '#1A2A80', color: '#fff' }}>
-              {aiLoading ? 'Asking…' : 'Ask AI'}
-            </button>
-          </form>
-        </div>
-      </div>
+      
       <div className="materials-grid">
         {materials.length === 0 ? (
           <p>No materials for your class yet.</p>
