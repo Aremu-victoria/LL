@@ -5,6 +5,7 @@ import Header from '../Components/Header';
 import StatsCard from '../Components/StatsCard';
 import FileUpload from '../Components/FileUpload';
 import Modal from '../Components/Modal';
+import MaterialCard from '../Components/MaterialCard';
 import './Dashboard.css';
 
 const TeacherDashboard = () => {
@@ -1035,28 +1036,29 @@ const TeacherDashboard = () => {
         </div>
       )}
       <div className="materials-grid">
-        {materials.filter(m => !selectedCourse || m.courseId === selectedCourse._id).map((material) => (
-          <div key={material._id} className="material-card">
-            <div className="material-icon" style={{ color: getFileColor(material.type) }}>
-              {getFileIcon(material.type)}
+        {materials
+          .filter(m => !selectedCourse || m.courseId === selectedCourse._id)
+          .map((material) => (
+            <div key={material._id}>
+              <MaterialCard
+                material={material}
+                user={user}
+                onDownload={(m) => handleViewMaterial(m)}
+                onShare={(m) => {
+                  if (m.fileUrl) {
+                    navigator.clipboard.writeText(m.fileUrl)
+                      .then(() => openModal({ type: 'success', title: 'Link Copied', message: 'Material link copied to clipboard!' }))
+                      .catch(() => openModal({ type: 'error', title: 'Copy Failed', message: 'Failed to copy link.' }));
+                  } else {
+                    openModal({ type: 'info', title: 'No Link', message: 'No file link available for this material.' });
+                  }
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                <button onClick={() => handleDeleteMaterial(material._id)} className="delete-btn">Delete</button>
+              </div>
             </div>
-            <h4>{material.title}</h4>
-            <p>{material.size || ''}</p>
-            {material.subject && <p className="subject-tag">{material.subject}</p>}
-            <div className="material-actions">
-              <button onClick={() => handleDeleteMaterial(material._id)} className="delete-btn">Delete</button>
-              <button onClick={() => {
-                if (material.fileUrl) {
-                  navigator.clipboard.writeText(material.fileUrl)
-                    .then(() => openModal({ type: 'success', title: 'Link Copied', message: 'Material link copied to clipboard!' }))
-                    .catch(() => openModal({ type: 'error', title: 'Copy Failed', message: 'Failed to copy link.' }));
-                } else {
-                  openModal({ type: 'info', title: 'No Link', message: 'No file link available for this material.' });
-                }
-              }}>Share</button>
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );

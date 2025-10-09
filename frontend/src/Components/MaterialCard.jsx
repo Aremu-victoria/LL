@@ -51,7 +51,8 @@ const MaterialCard = ({ material, user, onDownload, onShare }) => {
         boxShadow: '0 6px 18px rgba(17,24,39,0.06)',
         transition: 'transform 120ms ease, box-shadow 120ms ease',
         display: 'grid',
-        gap: 12
+        gap: 12,
+        textAlign: 'left'
       }}
       onMouseEnter={(e)=>{ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 10px 24px rgba(17,24,39,0.10)'; }}
       onMouseLeave={(e)=>{ e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow='0 6px 18px rgba(17,24,39,0.06)'; }}
@@ -75,7 +76,7 @@ const MaterialCard = ({ material, user, onDownload, onShare }) => {
           {icon}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontWeight: 700, color: '#111827', lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={material.title}>
+          <div style={{ fontWeight: 700, color: '#111827', lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', wordBreak: 'break-word' }} title={material.title}>
             {material.title}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
@@ -143,7 +144,7 @@ const MaterialCard = ({ material, user, onDownload, onShare }) => {
         {comments.length === 0 ? <p style={{ color: '#6b7280', margin: 0 }}>No comments yet.</p> : (
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             {comments.map((r, idx) => (
-              <li key={idx} style={{ marginBottom: 4 }}>
+              <li key={idx} style={{ marginBottom: 4, wordBreak: 'break-word' }}>
                 <b>{r.user?.firstName || r.user || 'Student'}:</b> {r.comment}
               </li>
             ))}
