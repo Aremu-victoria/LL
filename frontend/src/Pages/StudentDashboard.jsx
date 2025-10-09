@@ -182,15 +182,25 @@ const StudentDashboard = () => {
           }
         })
       });
-      let reply = '';
-      if (res.ok) {
-        const data = await res.json();
-        reply = data.reply || data.answer || (typeof data === 'string' ? data : '');
+      // Read raw text to surface exact backend output
+      const raw = await res.text();
+      let parsed = null;
+      try { parsed = raw ? JSON.parse(raw) : null; } catch {}
+      if (!res.ok) {
+        const msg = `API Error (status ${res.status}):\n${raw || '(no body)'}`;
+        setAiChat(prev => [...prev, { role: 'assistant', content: msg }]);
+        return;
       }
-      if (!reply) reply = 'AI service is unavailable right now. Please try again later.';
+      // Build a helpful reply while also showing raw response (for debugging)
+      let reply = '';
+      if (parsed && typeof parsed === 'object') {
+        reply = parsed.reply || parsed.answer || '';
+      }
+      if (!reply) reply = raw || 'Empty response from AI API.';
       setAiChat(prev => [...prev, { role: 'assistant', content: reply }]);
     } catch (err) {
-      setAiChat(prev => [...prev, { role: 'assistant', content: 'AI service is unavailable right now. Please try again later.' }]);
+      const msg = `Request Failed: ${err?.message || String(err)}\nIf available, check network tab for more details.`;
+      setAiChat(prev => [...prev, { role: 'assistant', content: msg }]);
     } finally {
       setAiLoading(false);
     }
