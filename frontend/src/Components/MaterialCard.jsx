@@ -52,8 +52,9 @@ const MaterialCard = ({ material, user, onDownload, onShare }) => {
         boxShadow: '0 6px 18px rgba(17,24,39,0.06)',
         transition: 'transform 120ms ease, box-shadow 120ms ease',
         display: 'grid',
-        gap: 20
+        margin: '10px' // space between cards
       }}
+      
       onMouseEnter={(e)=>{ e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 10px 24px rgba(17,24,39,0.10)'; }}
       onMouseLeave={(e)=>{ e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow='0 6px 18px rgba(17,24,39,0.06)'; }}
     >
