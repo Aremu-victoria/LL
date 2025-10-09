@@ -48,6 +48,7 @@ const MaterialCard = ({ material, user, onDownload, onShare }) => {
         border: '1px solid #eef2f7',
         borderRadius: 16,
         padding: 20,
+        width:'18rem',
         boxShadow: '0 6px 18px rgba(17,24,39,0.06)',
         transition: 'transform 120ms ease, box-shadow 120ms ease',
         display: 'grid',
