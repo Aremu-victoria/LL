@@ -11,14 +11,20 @@ require('./model/discussionModel');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(
-  cors("https://ll-3.onrender.com")
-);
+// Allow CORS from configured origins (default: all)
+const allowedOrigins = (process.env.CORS_ORIGINS || '*')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+app.use(cors({ origin: allowedOrigins.includes('*') ? '*' : allowedOrigins }));
 
 app.use(bodyParser.json());
 
 const studentsRoutes = require('./routes/studentsRoutes');
 app.use('/api', studentsRoutes);
+
+// Simple health endpoint
+app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
 // Seed super admin on startup (if not exists)
 const mongoose = require('mongoose');

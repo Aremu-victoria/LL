@@ -28,6 +28,8 @@ import StatsCard from '../Components/StatsCard';
 import './Dashboard.css';
 
 const StudentDashboard = () => {
+  // Prefer env-configured API base, otherwise current origin
+  const API_BASE = (process.env.REACT_APP_API_BASE || window.location.origin).replace(/\/$/, '');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [notificationCount] = useState(1);
   const [materials, setMaterials] = useState([]);
@@ -168,7 +170,7 @@ const StudentDashboard = () => {
     setAiChatInput('');
     setAiLoading(true);
     try {
-      const res = await fetch('https://ll-3.onrender.com/api/ai/chat', {
+      const res = await fetch(`${API_BASE}/api/ai/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

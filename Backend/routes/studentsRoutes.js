@@ -4,6 +4,7 @@ const router = express.Router();
 const studentsController = require('../controller/studentsController');
 const suggestionController = require('../controller/suggestionController');
 const discussionController = require('../controller/discussionController');
+const aiController = require('../controller/aiController');
 
 // Download material file by publicId
 router.get('/materials/download/:publicId', studentsController.downloadMaterialFile);
@@ -22,6 +23,9 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // Cloudinary upload endpoint
 router.post('/materials/upload', upload.single('file'), studentsController.uploadMaterialFile);
+
+// AI chat endpoint
+router.post('/ai/chat', aiController.chat);
 
 
 router.post('/signup', studentsController.signup);
